@@ -154,9 +154,9 @@ local function on_delivery_failed(event)
     storage.active_deliveries[train_id] = nil
 end
 
-local function on_delivery_cancelled(event)
+local function on_delivery_reassigned(event)
 
-    log("========== LTN DELIVERY CANCELLED ==========")
+    log("========== LTN DELIVERY REASSIGNED ==========")
 
     local train_id = event.train_id
     storage.active_deliveries = storage.active_deliveries or {}
@@ -171,16 +171,17 @@ local function on_delivery_cancelled(event)
 
     local action = tools.get_action_data(
         action_id,
-        "cancel",
+        "reassign",
         event.from_id,
         event.to_id
     )
 
-    log("========== CANCEL ACTION ==========")
+    log("========== REASSIGN ACTION ==========")
     log(serpent.block(action))
 
     -- Доставка больше не нужна в active_deliveries
     storage.active_deliveries[train_id] = nil
+    storage.active_deliveries[train_id] = delivery_data
 end
 
 local function on_delivery_error(event)
@@ -201,8 +202,8 @@ local function on_delivery_error(event)
     local action = tools.get_action_data(
         action_id,
         "error",
-        delivery_data.from_id,
-        delivery_data.to_id
+        event.from_id,
+        event.to_id
     )
 
     log("========== ERROR ACTION ==========")
@@ -255,26 +256,26 @@ script.on_init(function()
     script.on_event(delivery_failed_event_id, on_delivery_failed)
 
     -- ========================================
-    -- DELIVERY CANCELLED
+    -- DELIVERY REASSIGNED
     -- ========================================
 
-    local no_train_found_event_id = remote.call(
+    local delivery_reassigned_event_id = remote.call(
         LTN_INTERFACE,
-        "on_dispatcher_no_train_found"
+        "on_delivery_reassigned"
     )
 
-    script.on_event(no_train_found_event_id, on_dispatcher_no_train_found)
+    script.on_event(delivery_reassigned_event_id, on_delivery_reassigned)
 
     -- ========================================
     -- DELIVERY ERROR
     -- ========================================
 
-    local delivery_failed_event_id = remote.call(
+    local delivery_error_event_id = remote.call(
         LTN_INTERFACE,
-        "on_delivery_failed"
+        "on_delivery_error"
     )
 
-    script.on_event(delivery_failed_event_id, on_delivery_failed)
+    script.on_event(delivery_error_event_id, on_delivery_error)
 
 end)
 
