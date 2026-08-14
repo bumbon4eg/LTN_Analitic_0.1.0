@@ -1,0 +1,502 @@
+  94.083 Script @__LTN_Analitic__/control.lua:5: ========== LTN EVENT ==========
+  94.086 Script @__LTN_Analitic__/control.lua:6: {
+  available_trains = {
+    [43] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=43]"
+    },
+    [87] = {
+      capacity = 0,
+      depot_priority = 10,
+      fluid_capacity = 250000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=87]"
+    },
+    [90] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=90]"
+    },
+    [102] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=102]"
+    },
+    [105] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=105]"
+    },
+    [116] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=116]"
+    },
+    [141] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=141]"
+    },
+    [171] = {
+      capacity = 0,
+      depot_priority = 10,
+      fluid_capacity = 250000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=171]"
+    },
+    [175] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=175]"
+    },
+    [195] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=195]"
+    },
+    [201] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=201]"
+    },
+    [232] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=232]"
+    },
+    [292] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=292]"
+    },
+    [312] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=312]"
+    },
+    [322] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=322]"
+    },
+    [355] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=355]"
+    },
+    [362] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=362]"
+    },
+    [386] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=386]"
+    },
+    [409] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=409]"
+    },
+    [412] = {
+      capacity = 200,
+      depot_priority = 10,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=412]"
+    },
+    [473] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=473]"
+    },
+    [475] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=475]"
+    },
+    [477] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=477]"
+    },
+    [479] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=479]"
+    },
+    [481] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=481]"
+    },
+    [483] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=483]"
+    },
+    [485] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=485]"
+    },
+    [487] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=487]"
+    },
+    [489] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=489]"
+    },
+    [491] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=491]"
+    },
+    [493] = {
+      capacity = 40,
+      depot_priority = 0,
+      fluid_capacity = 0,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=493]"
+    },
+    [513] = {
+      capacity = 0,
+      depot_priority = 0,
+      fluid_capacity = 50000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=513]"
+    },
+    [518] = {
+      capacity = 0,
+      depot_priority = 0,
+      fluid_capacity = 50000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=518]"
+    },
+    [520] = {
+      capacity = 0,
+      depot_priority = 0,
+      fluid_capacity = 50000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=520]"
+    },
+    [522] = {
+      capacity = 0,
+      depot_priority = 0,
+      fluid_capacity = 50000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=522]"
+    },
+    [524] = {
+      capacity = 0,
+      depot_priority = 0,
+      fluid_capacity = 50000,
+      force = "[LuaForce: player]",
+      network_id = -1,
+      select_count = 0,
+      surface = "[LuaSurface: nauvis]",
+      train = "[LuaTrain: id=524]"
+    }
+  },
+  deliveries = {
+    [471] = {
+      force = "[LuaForce: player]",
+      from = "[item=bulk-inserter][item=stone-brick]",
+      from_id = 555196,
+      network_id = 4294967295,
+      shipment = {
+        ["item,stone-brick"] = 3674
+      },
+      started = 18594416,
+      surface_connections = {},
+      surface_connections_count = 0,
+      to = "[item=plastic-bar][item=advanced-circuit][item=stone-brick][item=steel-plate]",
+      to_id = 596356,
+      train = "[LuaTrain: id=471]"
+    }
+  },
+  mod_name = "LogisticTrainNetwork",
+  name = 303,
+  new_deliveries = {},
+  provided_by_stop = {
+    [108107] = {
+      ["item,iron-plate"] = 288000
+    },
+    [272431] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272438] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272481] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272490] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272495] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272502] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [272528] = {
+      ["fluid,crude-oil"] = 25000
+    },
+    [294344] = {
+      ["item,stone"] = 144000
+    },
+    [346037] = {
+      ["item,iron-plate"] = 16176
+    },
+    [361180] = {
+      ["item,iron-ore"] = 144000
+    },
+    [374862] = {
+      ["item,copper-plate"] = 288000
+    },
+    [400817] = {
+      ["item,copper-ore"] = 144000
+    },
+    [447901] = {
+      ["item,steel-plate"] = 57600
+    },
+    [504134] = {
+      ["item,coal"] = 144000
+    },
+    [509929] = {
+      ["item,piercing-rounds-magazine"] = 57600
+    },
+    [537067] = {
+      ["item,stone"] = 144000
+    },
+    [555196] = {
+      ["item,stone-brick"] = 214914
+    },
+    [558538] = {
+      ["item,grenade"] = 24185
+    },
+    [558712] = {
+      ["item,stone-wall"] = 57600
+    },
+    [561696] = {
+      ["item,military-science-pack"] = 115000
+    },
+    [592599] = {
+      ["item,plastic-bar"] = 57600
+    },
+    [630218] = {
+      ["item,electronic-circuit"] = 511771
+    },
+    [694142] = {
+      ["item,chemical-science-pack"] = 115200
+    },
+    [732774] = {
+      ["item,battery"] = 173580
+    },
+    [757524] = {
+      ["item,electric-engine-unit"] = 28415
+    },
+    [772455] = {
+      ["item,steel-plate"] = 143464
+    },
+    [1223964] = {
+      ["item,sulfur"] = 28800
+    },
+    [1228522] = {
+      ["item,rocket-fuel"] = 10210
+    },
+    [1389800] = {
+      ["item,iron-ore"] = 2738
+    },
+    [1400525] = {
+      ["item,iron-plate"] = 432000
+    },
+    [1849038] = {
+      ["item,iron-plate"] = 24984
+    }
+  },
+  requests_by_stop = {
+    [596356] = {
+      ["item,advanced-circuit"] = 8000
+    },
+    [686175] = {
+      ["item,engine-unit"] = 4000
+    },
+    [755644] = {
+      ["fluid,lubricant"] = 100000
+    },
+    [756164] = {
+      ["item,advanced-circuit"] = 20000
+    },
+    [758778] = {
+      ["fluid,sulfuric-acid"] = 100000
+    }
+  },
+  tick = 18598716,
+  update_interval = 354
+}

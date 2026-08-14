@@ -1,0 +1,19 @@
+{
+  "name": "LTN_Analitic",
+  "title": "LTN Analitic",
+  "description": "Analitic tool for LTN",
+  "author": "Factorio community",
+  "homepage": "https://github.com/Astorin/LTN-Analitic",
+  "version": "0.1.0",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "LogisticTrainNetwork >= 2.0.0",
+    "?ltn-cleanup >= 1.0",
+    "?LTN_Combinator_Modernized >= 2.0",
+    "?LTN_Content_Reader >= 1.0",
+    "?LtnManager >= 0.5.0",
+    "?LtnManagerUpdated >= 1.0.0",
+    "?ltn-train-info >= 1.0.0",
+    "?se-ltn-glue >= 0.6.0"
+  ]
+}
