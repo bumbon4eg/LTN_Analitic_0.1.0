@@ -243,17 +243,12 @@ function tools.get_station_data(station_id)
     return data
 end
 
-function tools.get_action_data(action_id, action, delivery_data)
-
-    if not delivery_data then
-        return nil
-    end
-
+function tools.get_action_data(action_id, action, from_id, to_id)
     return {
         id = action_id,
         action = action,
-        from_id = delivery_data.from_id,
-        to_id = delivery_data.to_id
+        from_id = from_id,
+        to_id = to_id
     }
 end
 

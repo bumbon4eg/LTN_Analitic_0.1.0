@@ -1,0 +1,68 @@
+```
+# ==========================================
+# VS Code (Настройки редактора и локальное окружение)
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# ==========================================
+# Временные файлы и артефакты Lua / Busted / LuaRocks
+# ==========================================
+# Локальные зависимости (если используется LuaRocks)
+lua_modules/
+.luarocks/
+
+# Временные файлы компиляции
+*.o
+*.os
+*.so
+*.dylib
+*.dll
+
+# Файлы тестирования и кэша
+.busted
+.luacov
+luacov.stats.out
+luacov.report.out
+.luacheckrc.cache
+
+# ==========================================
+# Специфика Factorio (если разрабатывается мод)
+# ==========================================
+# Сгенерированные архивные сборки мода
+*.zip
+
+# Логи и сохранения Factorio (если симлинкали папку)
+factorio-current.log
+factorio-previous.log
+template-log-handle.json
+saves/
+
+# ==========================================
+# Системные файлы ОС
+# ==========================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.apple_desktop
+.LSOverride
+
+# ==========================================
+# JetBrains IDEs (PyCharm, IntelliJ IDEA, WebStorm и др.)
+# ==========================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+```

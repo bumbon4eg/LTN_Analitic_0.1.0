@@ -26,7 +26,8 @@ local function on_dispatcher_updated(event)
             local action = tools.get_action_data(
                 action_id,
                 "create",
-                delivery_data
+                delivery_data.from_id,
+                delivery_data.to_id
             )
 
             log(serpent.block(action))
@@ -69,9 +70,7 @@ local function on_delivery_pickup_complete(event)
     log("========== LTN PICKUP COMPLETE ==========")
 
     local train_id = event.train_id
-
     storage.active_deliveries = storage.active_deliveries or {}
-
     local delivery_data = storage.active_deliveries[train_id]
 
     if not delivery_data then
@@ -83,13 +82,13 @@ local function on_delivery_pickup_complete(event)
     -- ACTION: ACCEPT
     -- ========================================
 
-    local action_id =
-        tools.get_next_action_id()
+    local action_id = tools.get_next_action_id()
 
     local action = tools.get_action_data(
         action_id,
         "accept",
-        delivery_data
+        delivery_data.from_id,
+        delivery_data.to_id
     )
 
     -- ========================================
@@ -126,13 +125,104 @@ local function on_delivery_pickup_complete(event)
     storage.active_deliveries[train_id] = nil
 end
 
+local function on_delivery_failed(event)
+
+    log("========== LTN DELIVERY FAILED ==========")
+
+    local delivery_id = event.delivery_id
+    storage.active_deliveries = storage.active_deliveries or {}
+    local delivery_data = event.delivery_data
+
+    if not delivery_data then
+        log("Delivery data not found: " .. tostring(delivery_id))
+        return
+    end
+
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "fail",
+        delivery_data.from_id,
+        delivery_data.to_id 
+    )
+
+    log("========== FAIL ACTION ==========")
+    log(serpent.block(action))
+
+    -- Доставка больше не нужна в active_deliveries
+    storage.active_deliveries[train_id] = nil
+end
+
+local function on_delivery_cancelled(event)
+
+    log("========== LTN DELIVERY CANCELLED ==========")
+
+    local train_id = event.train_id
+    storage.active_deliveries = storage.active_deliveries or {}
+    local delivery_data = storage.active_deliveries[train_id]
+
+    if not delivery_data then
+        log("Delivery not found for train: " .. tostring(train_id))
+        return
+    end
+
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "cancel",
+        event.from_id,
+        event.to_id
+    )
+
+    log("========== CANCEL ACTION ==========")
+    log(serpent.block(action))
+
+    -- Доставка больше не нужна в active_deliveries
+    storage.active_deliveries[train_id] = nil
+end
+
+local function on_delivery_error(event)
+
+    log("========== LTN DELIVERY ERROR ==========")
+
+    local train_id = event.train_id
+    storage.active_deliveries = storage.active_deliveries or {}
+    local delivery_data = storage.active_deliveries[train_id]
+
+    if not delivery_data then
+        log("Delivery not found for train: " .. tostring(train_id))
+        return
+    end
+
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "error",
+        delivery_data.from_id,
+        delivery_data.to_id
+    )
+
+    log("========== ERROR ACTION ==========")
+    log(serpent.block(action))
+
+    -- Доставка больше не нужна в active_deliveries
+    storage.active_deliveries[train_id] = nil
+end
+
 script.on_init(function()
 
-    -- TODO: добавить для действий "cancel" и "reject" (когда LTN не может найти поезд для доставки)
     if not remote.interfaces[LTN_INTERFACE] then
         log("LTN interface not found")
         return
     end
+
+    -- ========================================
+    -- DELIVERY CREATED
+    -- ========================================
+
 
     local event_id = remote.call(
         LTN_INTERFACE,
@@ -141,12 +231,50 @@ script.on_init(function()
 
     script.on_event(event_id, on_dispatcher_updated)
 
+    -- ========================================
+    -- DELIVERY COMPLETED
+    -- ========================================
+
+
     local pickup_complete_event_id = remote.call(
         LTN_INTERFACE,
         "on_delivery_pickup_complete"
     )
 
     script.on_event(pickup_complete_event_id, on_delivery_pickup_complete)
+
+    -- ========================================
+    -- DELIVERY FAILED
+    -- ========================================
+
+    local delivery_failed_event_id = remote.call(
+        LTN_INTERFACE,
+        "on_delivery_failed"
+    )
+
+    script.on_event(delivery_failed_event_id, on_delivery_failed)
+
+    -- ========================================
+    -- DELIVERY CANCELLED
+    -- ========================================
+
+    local no_train_found_event_id = remote.call(
+        LTN_INTERFACE,
+        "on_dispatcher_no_train_found"
+    )
+
+    script.on_event(no_train_found_event_id, on_dispatcher_no_train_found)
+
+    -- ========================================
+    -- DELIVERY ERROR
+    -- ========================================
+
+    local delivery_failed_event_id = remote.call(
+        LTN_INTERFACE,
+        "on_delivery_failed"
+    )
+
+    script.on_event(delivery_failed_event_id, on_delivery_failed)
 
 end)
 
