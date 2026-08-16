@@ -2,67 +2,55 @@ local tools = require("tools")
 
 local LTN_INTERFACE = "logistic-train-network"
 
-local function on_dispatcher_updated(event)
 
-    log("========== LTN EVENT ==========")
+-- ========================================
+-- CREATE DELIVERY
+-- ========================================
 
-    local event_data = event
-    local new_deliveries = event_data.new_deliveries or {}
-    local deliveries = event_data.deliveries or {}
+local function on_delivery_created(train_id, delivery_data)
+
+    if not delivery_data then
+        return
+    end
 
     storage.active_deliveries = storage.active_deliveries or {}
-    storage.next_action_id = storage.next_action_id or 1
+    storage.active_deliveries[train_id] = delivery_data
 
-    -- Оставляет только новые доставки, которые были созданы в этом тике.
-    -- Это избегает перегрузки хранилища.
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "create",
+        delivery_data.from_id,
+        delivery_data.to_id
+    )
+
+    log("========== DELIVERY CREATED ==========")
+    log(serpent.block(action))
+end
+
+
+-- ========================================
+-- LTN DISPATCHER UPDATED
+-- ========================================
+
+local function on_dispatcher_updated(event)
+
+    local new_deliveries = event.new_deliveries or {}
+    local deliveries = event.deliveries or {}
+
+    -- LTN может вызывать это событие постоянно.
+    -- Само событие ничего не создаёт.
+    -- Обрабатываем только действительно новые доставки.
+
     for _, train_id in ipairs(new_deliveries) do
+
         local delivery_data = deliveries[train_id]
 
         if delivery_data then
-            storage.active_deliveries[train_id] = delivery_data
-
-            local action_id = tools.get_next_action_id()
-
-            local action = tools.get_action_data(
-                action_id,
-                "create",
-                delivery_data.from_id,
-                delivery_data.to_id
-            )
-
-            log(serpent.block(action))
+            on_delivery_created(train_id, delivery_data)
         end
     end
-
-
-
-    -- for _, train_id in ipairs(new_deliveries) do
-    --     local train = game.train_manager.get_train_by_id(train_id)
-
-    --     if not train then
-    --         log("Train not found: " .. tostring(train_id))
-    --         return
-    --     end
-
-    --     local mt = getmetatable(train)
-
-    --     game.print(serpent.block(mt))
-
-    --     table.insert(
-    --         train_deliveries_data,
-    --         {
-    --             train = mt,
-    --             delivery = deliveries[train_id],
-    --         }
-    --     )
-    -- end
-
-    
-
-    -- game.print(
-    --     "All data: " ..
-    --     serpent.block(train_deliveries_data)
-    -- )
 end
 
 local function on_delivery_pickup_complete(event)
@@ -95,8 +83,7 @@ local function on_delivery_pickup_complete(event)
     -- ФИЗИЧЕСКИЙ ГРУЗ ПОЕЗДА
     -- ========================================
 
-    local current_cargo =
-        tools.get_train_cargo(train_id)
+    local current_cargo = tools.get_train_cargo(train_id)
 
     if not current_cargo then
         log("Could not get cargo for train: " .. tostring(train_id))
@@ -129,65 +116,6 @@ local function on_delivery_failed(event)
 
     log("========== LTN DELIVERY FAILED ==========")
 
-    local delivery_id = event.delivery_id
-    storage.active_deliveries = storage.active_deliveries or {}
-    local delivery_data = event.delivery_data
-
-    if not delivery_data then
-        log("Delivery data not found: " .. tostring(delivery_id))
-        return
-    end
-
-    local action_id = tools.get_next_action_id()
-
-    local action = tools.get_action_data(
-        action_id,
-        "fail",
-        delivery_data.from_id,
-        delivery_data.to_id 
-    )
-
-    log("========== FAIL ACTION ==========")
-    log(serpent.block(action))
-
-    -- Доставка больше не нужна в active_deliveries
-    storage.active_deliveries[train_id] = nil
-end
-
-local function on_delivery_reassigned(event)
-
-    log("========== LTN DELIVERY REASSIGNED ==========")
-
-    local train_id = event.train_id
-    storage.active_deliveries = storage.active_deliveries or {}
-    local delivery_data = storage.active_deliveries[train_id]
-
-    if not delivery_data then
-        log("Delivery not found for train: " .. tostring(train_id))
-        return
-    end
-
-    local action_id = tools.get_next_action_id()
-
-    local action = tools.get_action_data(
-        action_id,
-        "reassign",
-        event.from_id,
-        event.to_id
-    )
-
-    log("========== REASSIGN ACTION ==========")
-    log(serpent.block(action))
-
-    -- Доставка больше не нужна в active_deliveries
-    storage.active_deliveries[train_id] = nil
-    storage.active_deliveries[train_id] = delivery_data
-end
-
-local function on_delivery_error(event)
-
-    log("========== LTN DELIVERY ERROR ==========")
-
     local train_id = event.train_id
     storage.active_deliveries = storage.active_deliveries or {}
     local delivery_data = storage.active_deliveries[train_id]
@@ -202,26 +130,79 @@ local function on_delivery_error(event)
     local action = tools.get_action_data(
         action_id,
         "error",
-        event.from_id,
-        event.to_id
+        delivery_data.from_id,
+        delivery_data.to_id
     )
 
     log("========== ERROR ACTION ==========")
     log(serpent.block(action))
 
-    -- Доставка больше не нужна в active_deliveries
     storage.active_deliveries[train_id] = nil
 end
 
-script.on_init(function()
+local function on_delivery_reassigned(event)
 
+    log("========== LTN DELIVERY REASSIGNED ==========")
+
+    local old_train_id = event.old_train_id
+    local new_train_id = event.new_train_id
+
+    storage.active_deliveries = storage.active_deliveries or {}
+
+    -- Находим доставку у старого поезда
+    local delivery_data = storage.active_deliveries[old_train_id]
+
+    if not delivery_data then
+        log("Delivery not found for old train: " .. tostring(old_train_id))
+        return
+    end
+
+    -- ========================================
+    -- ACTION: REASSIGNED
+    -- ========================================
+
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "reassigned",
+        delivery_data.from_id,
+        delivery_data.to_id
+    )
+
+    log("========== REASSIGNED ACTION ==========")
+    log(serpent.block(action))
+
+    -- Переносим доставку на новый поезд
+    storage.active_deliveries[old_train_id] = nil
+    storage.active_deliveries[new_train_id] = delivery_data
+end
+
+local function on_dispatcher_no_train_found(event)
+
+    log("========== LTN DISPATCHER NO TRAIN FOUND ==========")
+
+    local action_id = tools.get_next_action_id()
+
+    local action = tools.get_action_data(
+        action_id,
+        "reject",
+        event.from_id,
+        event.to_id
+    )
+
+    log("========== REJECT ACTION ==========")
+    log(serpent.block(action))
+end
+
+local function register_ltn_events()
     if not remote.interfaces[LTN_INTERFACE] then
         log("LTN interface not found")
         return
     end
 
     -- ========================================
-    -- DELIVERY CREATED
+    -- DELIVERY SEARCH ON DISPATCHER UPDATED
     -- ========================================
 
 
@@ -267,16 +248,23 @@ script.on_init(function()
     script.on_event(delivery_reassigned_event_id, on_delivery_reassigned)
 
     -- ========================================
-    -- DELIVERY ERROR
+    -- DELIVERY REJECT
     -- ========================================
 
-    local delivery_error_event_id = remote.call(
+    local delivery_reject_event_id = remote.call(
         LTN_INTERFACE,
-        "on_delivery_error"
+        "on_dispatcher_no_train_found"
     )
 
-    script.on_event(delivery_error_event_id, on_delivery_error)
+    script.on_event(delivery_reject_event_id, on_dispatcher_no_train_found)
+end
 
+script.on_init(function()
+    register_ltn_events()
+end)
+
+script.on_configuration_changed(function()
+    register_ltn_events()
 end)
 
 
