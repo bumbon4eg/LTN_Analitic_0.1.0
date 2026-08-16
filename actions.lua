@@ -4,45 +4,60 @@ local LTN_INTERFACE = "logistic-train-network"
 
 local actions = {}
 
-local function on_delivery_completed(event)
+local function ensure_storage()
+    storage.active_deliveries = storage.active_deliveries or {}
+end
 
+local function get_active_delivery(train_id)
+    ensure_storage()
+    return storage.active_deliveries[train_id]
+end
+
+local function get_action_payload(order_id, action_name, delivery_data)
+    if not delivery_data then
+        return nil
+    end
+
+    return tools.get_action_data(
+        order_id,
+        action_name,
+        delivery_data.from_id,
+        delivery_data.to_id
+    )
+end
+
+local function log_payload(label, payload)
+    if payload then
+        log("========== " .. label .. " ==========")
+        log(serpent.block(payload))
+    end
+end
+
+local function on_delivery_completed(event)
     log("========== LTN DELIVERY COMPLETED ==========")
 
     local train_id = event.train_id
-    storage.active_deliveries = storage.active_deliveries or {}
-    local active = storage.active_deliveries[train_id]
+    local active = get_active_delivery(train_id)
 
-    if not active then
+    if not active or not active.delivery then
         log("Delivery not found for train: " .. tostring(train_id))
         return
     end
 
-    local delivery_data = active.delivery
-    local order_id = active.order_id
-
-    local action = tools.get_action_data(
-        order_id,
+    local action = get_action_payload(
+        active.order_id,
         "complete",
-        delivery_data.from_id,
-        delivery_data.to_id
+        active.delivery
     )
 
-    log("========== COMPLETE ACTION ==========")
-    log(serpent.block(action))
-
+    log_payload("COMPLETE ACTION", action)
     storage.active_deliveries[train_id] = nil
 end
 
 local function on_delivery_created(train_id, delivery_data)
-
     if not delivery_data then
         return
     end
-
-    storage.active_deliveries = storage.active_deliveries or {}
-    storage.next_order_id = storage.next_order_id or 1
-    local order_id = storage.next_order_id
-    storage.next_order_id = storage.next_order_id + 1
 
     local current_cargo = tools.get_train_cargo(train_id)
 
@@ -50,6 +65,12 @@ local function on_delivery_created(train_id, delivery_data)
         log("Could not get cargo for train: " .. tostring(train_id))
         return
     end
+
+    ensure_storage()
+    storage.next_order_id = storage.next_order_id or 1
+
+    local order_id = storage.next_order_id
+    storage.next_order_id = storage.next_order_id + 1
 
     local order = tools.get_order_data(
         order_id,
@@ -59,11 +80,10 @@ local function on_delivery_created(train_id, delivery_data)
         current_cargo
     )
 
-    local action = tools.get_action_data(
+    local action = get_action_payload(
         order_id,
         "create",
-        delivery_data.from_id,
-        delivery_data.to_id
+        delivery_data
     )
 
     storage.active_deliveries[train_id] = {
@@ -71,15 +91,11 @@ local function on_delivery_created(train_id, delivery_data)
         order_id = order_id
     }
 
-    log("========== ORDER CREATED ==========")
-    log(serpent.block(order))
-
-    log("========== CREATE ACTION ==========")
-    log(serpent.block(action))
+    log_payload("ORDER CREATED", order)
+    log_payload("CREATE ACTION", action)
 end
 
 local function on_dispatcher_updated(event)
-
     local new_deliveries = event.new_deliveries or {}
     local deliveries = event.deliveries or {}
 
@@ -93,104 +109,96 @@ local function on_dispatcher_updated(event)
 end
 
 local function on_delivery_pickup_complete(event)
-
     log("========== LTN PICKUP COMPLETE ==========")
 
     local train_id = event.train_id
-    local active = storage.active_deliveries[train_id]
+    local active = get_active_delivery(train_id)
 
-    if not active then
+    if not active or not active.delivery then
         log("Delivery not found for train: " .. tostring(train_id))
         return
     end
 
-    local order_id = active.order_id
-    local delivery_data = active.delivery
-
-    if not delivery_data then
-        log("Delivery not found for train: " .. tostring(train_id))
-        return
-    end
-
-    local action = tools.get_action_data(
-        order_id,
+    local action = get_action_payload(
+        active.order_id,
         "accept",
-        delivery_data.from_id,
-        delivery_data.to_id
+        active.delivery
     )
 
-    log("========== ACCEPT ACTION ==========")
-    log(serpent.block(action))
+    log_payload("ACCEPT ACTION", action)
 end
 
 local function on_delivery_failed(event)
-
     log("========== LTN DELIVERY FAILED ==========")
 
     local train_id = event.train_id
-    local active = storage.active_deliveries[train_id]
+    local active = get_active_delivery(train_id)
 
-    if not active then
+    if not active or not active.delivery then
         log("Delivery not found for train: " .. tostring(train_id))
         return
     end
 
-    local order_id = active.order_id
-    local delivery_data = active.delivery
-
-    if not delivery_data then
-        log("Delivery not found for train: " .. tostring(train_id))
-        return
-    end
-
-    local action = tools.get_action_data(
-        order_id,
+    local action = get_action_payload(
+        active.order_id,
         "error",
-        delivery_data.from_id,
-        delivery_data.to_id
+        active.delivery
     )
 
-    log("========== ERROR ACTION ==========")
-    log(serpent.block(action))
-
+    log_payload("ERROR ACTION", action)
     storage.active_deliveries[train_id] = nil
 end
 
 local function on_delivery_reassigned(event)
-
     log("========== LTN DELIVERY REASSIGNED ==========")
 
     local old_train_id = event.old_train_id
     local new_train_id = event.new_train_id
 
-    storage.active_deliveries = storage.active_deliveries or {}
+    ensure_storage()
 
     local active = storage.active_deliveries[old_train_id]
 
-    if not active then
+    if not active or not active.delivery then
         log("Delivery not found for old train: " .. tostring(old_train_id))
         return
     end
 
-    local order_id = active.order_id
-    local delivery_data = active.delivery
-
-    local action = tools.get_action_data(
-        order_id,
+    local action = get_action_payload(
+        active.order_id,
         "reassigned",
-        delivery_data.from_id,
-        delivery_data.to_id
+        active.delivery
     )
 
-    log("========== REASSIGNED ACTION ==========")
-    log(serpent.block(action))
+    log_payload("REASSIGNED ACTION", action)
 
     storage.active_deliveries[old_train_id] = nil
     storage.active_deliveries[new_train_id] = active
 end
 
-local function on_dispatcher_no_train_found(event)
+local function on_dispatcher_no_train_found()
     log("========== LTN DISPATCHER NO TRAIN FOUND ==========")
+end
+
+local function register_ltn_event(event_name, callback)
+    if not remote.interfaces[LTN_INTERFACE] then
+        return false
+    end
+
+    local interface = remote.interfaces[LTN_INTERFACE]
+
+    if not interface or interface[event_name] == nil then
+        return false
+    end
+
+    local event_id = remote.call(LTN_INTERFACE, event_name)
+
+    if event_id then
+        script.on_event(event_id, callback)
+        return true
+    end
+
+    return false
 end
 
 function actions.register_ltn_events()
@@ -199,47 +207,12 @@ function actions.register_ltn_events()
         return
     end
 
-    local event_id = remote.call(
-        LTN_INTERFACE,
-        "on_dispatcher_updated"
-    )
-
-    script.on_event(event_id, on_dispatcher_updated)
-
-    local pickup_complete_event_id = remote.call(
-        LTN_INTERFACE,
-        "on_delivery_pickup_complete"
-    )
-
-    script.on_event(pickup_complete_event_id, on_delivery_pickup_complete)
-
-    local delivery_failed_event_id = remote.call(
-        LTN_INTERFACE,
-        "on_delivery_failed"
-    )
-
-    script.on_event(delivery_failed_event_id, on_delivery_failed)
-
-    local delivery_reassigned_event_id = remote.call(
-        LTN_INTERFACE,
-        "on_delivery_reassigned"
-    )
-
-    script.on_event(delivery_reassigned_event_id, on_delivery_reassigned)
-
-    local delivery_reject_event_id = remote.call(
-        LTN_INTERFACE,
-        "on_dispatcher_no_train_found"
-    )
-
-    script.on_event(delivery_reject_event_id, on_dispatcher_no_train_found)
-
-    local delivery_completed_event_id = remote.call(
-        LTN_INTERFACE,
-        "on_delivery_completed"
-    )
-
-    script.on_event(delivery_completed_event_id, on_delivery_completed)
+    register_ltn_event("on_dispatcher_updated", on_dispatcher_updated)
+    register_ltn_event("on_delivery_pickup_complete", on_delivery_pickup_complete)
+    register_ltn_event("on_delivery_failed", on_delivery_failed)
+    register_ltn_event("on_delivery_reassigned", on_delivery_reassigned)
+    register_ltn_event("on_dispatcher_no_train_found", on_dispatcher_no_train_found)
+    register_ltn_event("on_delivery_completed", on_delivery_completed)
 end
 
 return actions
