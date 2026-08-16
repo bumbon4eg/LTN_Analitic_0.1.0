@@ -1,14 +1,5 @@
 local tools = {}
 
-function tools.get_next_action_id()
-    storage.next_action_id = storage.next_action_id or 1
-
-    local action_id = storage.next_action_id
-    storage.next_action_id = storage.next_action_id + 1
-
-    return action_id
-end
-
 function tools.get_train_data(train_id)
     local train = game.train_manager.get_train_by_id(train_id)
 
@@ -243,20 +234,20 @@ function tools.get_station_data(station_id)
     return data
 end
 
-function tools.get_action_data(action_id, action, from_id, to_id)
+function tools.get_action_data(order_id, action, from_id, to_id)
     return {
-        id = action_id,
+        order_id = order_id,
         action = action,
         from_id = from_id,
         to_id = to_id
     }
 end
 
-function tools.get_order_data(action_id, train_id, time, network_id, current_cargo)
+function tools.get_order_data(order_id, train_id, creation_time, network_id, current_cargo)
     return {
-        action_id = action_id,
+        id = order_id,
         train_id = train_id,
-        time = time,
+        creation_time = creation_time,
         network_id = network_id,
         current_cargo = current_cargo or {}
     }
