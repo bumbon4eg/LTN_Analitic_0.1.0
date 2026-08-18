@@ -1,4 +1,5 @@
 local actions = require("actions")
+local debug = require("debug")
 
 script.on_init(function()
     actions.register_ltn_events()
@@ -12,7 +13,7 @@ commands.add_command(
     "ltn_debug_orders",
     "Show active LTN orders",
     function()
-        actions.debug_active_deliveries()
+        debug.show_active_deliveries()
     end
 )
 
@@ -20,6 +21,22 @@ commands.add_command(
     "ltn_clear_active",
     "Clear active LTN deliveries",
     function()
-        actions.debug_clear_active_deliveries()
+        debug.clear_active_deliveries()
+    end
+)
+
+commands.add_command(
+    "ltn_debug_buffer",
+    "Show LTN send buffer",
+    function()
+        debug.show_send_buffer()
+    end
+)
+
+commands.add_command(
+    "ltn_debug_send_data",
+    "Show collected data for sending",
+    function()
+        debug.show_send_data()
     end
 )

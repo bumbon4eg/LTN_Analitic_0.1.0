@@ -1,10 +1,11 @@
 local tools = require("tools")
+local buffer = require("buffer")
 
 local LTN_INTERFACE = "logistic-train-network"
 
 local actions = {}
 
--- Вспомогательные функции
+-- Функции для хранения активных доставок
 local function ensure_storage()
     storage.active_deliveries = storage.active_deliveries or {}
 end
@@ -99,10 +100,14 @@ local function on_delivery_completed(event)
     )
 
     log_payload("COMPLETE ACTION", action)
+
+    buffer.buffer_action(action)
+
     remove_active_delivery(train_id)
 end
 
 local function on_delivery_created(train_id, delivery_data)
+
     if not delivery_data then
         return
     end
@@ -115,10 +120,14 @@ local function on_delivery_created(train_id, delivery_data)
     end
 
     ensure_storage()
-    storage.next_order_id = storage.next_order_id or 1
 
+    storage.next_order_id = storage.next_order_id or 1
     local order_id = storage.next_order_id
     storage.next_order_id = storage.next_order_id + 1
+
+    -- ========================================
+    -- ORDER
+    -- ========================================
 
     local order = tools.get_order_data(
         order_id,
@@ -128,13 +137,50 @@ local function on_delivery_created(train_id, delivery_data)
         current_cargo
     )
 
+    -- ========================================
+    -- ACTION: CREATE
+    -- ========================================
+
     local action = get_action_payload(
         order_id,
         "create",
         delivery_data
     )
 
-    set_active_delivery(train_id, delivery_data, order_id, "created")
+    -- ========================================
+    -- TRAIN
+    -- ========================================
+
+    local train_data =
+        tools.get_train_data(train_id)
+
+    -- ========================================
+    -- STATIONS
+    -- ========================================
+
+    local from_station = tools.get_station_data(delivery_data.from_id)
+    local to_station = tools.get_station_data(delivery_data.to_id)
+
+    -- ========================================
+    -- ACTIVE DELIVERY
+    -- ========================================
+
+    set_active_delivery(
+        train_id,
+        delivery_data,
+        order_id,
+        "created"
+    )
+
+    -- ========================================
+    -- BUFFER
+    -- ========================================
+
+    buffer.buffer_order(order)
+    buffer.buffer_action(action)
+    buffer.buffer_train(tools.get_train_data(train_id))
+    buffer.buffer_station(tools.get_station_data(delivery_data.from_id))
+    buffer.buffer_station(tools.get_station_data(delivery_data.to_id))
 
     log_payload("ORDER CREATED", order)
     log_payload("CREATE ACTION", action)
@@ -171,6 +217,8 @@ local function on_delivery_pickup_complete(event)
 
     log_payload("ACCEPT ACTION", action)
 
+    buffer.buffer_action(action)
+
     set_active_state(train_id, "accepted")
 end
 
@@ -191,6 +239,9 @@ local function on_delivery_failed(event)
     )
 
     log_payload("ERROR ACTION", action)
+
+    buffer.buffer_action(action)
+
     remove_active_delivery(train_id)
 end
 
@@ -217,8 +268,11 @@ local function on_delivery_reassigned(event)
 
     log_payload("REASSIGNED ACTION", action)
 
-    storage.active_deliveries[old_train_id] = nil
+    buffer.buffer_action(action)
+    buffer.buffer_train(tools.get_train_data(new_train_id))
 
+    -- Перенос активной доставки на новый поезд
+    storage.active_deliveries[old_train_id] = nil
     storage.active_deliveries[new_train_id] = old_active
 end
 
@@ -260,83 +314,6 @@ function actions.register_ltn_events()
     register_ltn_event("on_delivery_reassigned", on_delivery_reassigned)
     register_ltn_event("on_dispatcher_no_train_found", on_dispatcher_no_train_found)
     register_ltn_event("on_delivery_completed", on_delivery_completed)
-end
-
-local function debug_active_deliveries()
-
-    ensure_storage()
-
-    local count = 0
-
-    for _ in pairs(storage.active_deliveries) do
-        count = count + 1
-    end
-
-    game.print(
-        "========== ACTIVE DELIVERIES: "
-        .. tostring(count)
-        .. " =========="
-    )
-
-    if count == 0 then
-        game.print("No active deliveries.")
-        return
-    end
-
-    for train_id, active in pairs(storage.active_deliveries) do
-
-        local debug_data = {
-            train_id = train_id,
-            order_id = active.order_id,
-            state = active.state
-        }
-
-        if active.delivery then
-
-            debug_data.from_id =
-                active.delivery.from_id
-
-            debug_data.to_id =
-                active.delivery.to_id
-
-            debug_data.network_id =
-                active.delivery.network_id
-
-            debug_data.started =
-                active.delivery.started
-
-        else
-
-            debug_data.ERROR =
-                "Invalid active_delivery format"
-
-        end
-
-        game.print(
-            serpent.block(debug_data)
-        )
-
-        log(
-            serpent.block(debug_data)
-        )
-    end
-end
-
-function actions.debug_active_deliveries()
-    debug_active_deliveries()
-end
-
-function actions.debug_clear_active_deliveries()
-
-    storage.active_deliveries = {}
-
-    game.print(
-        "Active deliveries storage cleared."
-    )
-
-    log(
-        "========== ACTIVE DELIVERIES CLEARED =========="
-    )
 end
 
 return actions
