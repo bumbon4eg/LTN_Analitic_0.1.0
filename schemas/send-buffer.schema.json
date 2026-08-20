@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "send-buffer.schema.json",
+  "title": "Send Buffer",
+  "description": "Persistent buffer containing data waiting to be sent.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["orders", "actions", "trains", "stations"],
+  "properties": {
+    "orders": {
+      "type": "array",
+      "items": { "$ref": "order.schema.json" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "action.schema.json" }
+    },
+    "trains": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "train-data.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "stations": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "station-data.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

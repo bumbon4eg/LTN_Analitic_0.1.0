@@ -1,14 +1,11 @@
-local actions = require("actions")
 local buffer = require("buffer")
+local storage_api = require("storage")
 
 local debug = {}
 
-local function ensure_storage()
-    storage.active_deliveries = storage.active_deliveries or {}
-end
-
+---@return nil
 local function show_active_deliveries()
-    ensure_storage()
+    storage_api.ensure()
 
     local count = 0
 
@@ -50,8 +47,9 @@ local function show_active_deliveries()
     end
 end
 
+---@return nil
 local function show_send_buffer()
-    ensure_storage()
+    storage_api.ensure()
 
     local orders_count = #storage.send_buffer.orders
     local actions_count = #storage.send_buffer.actions
@@ -78,6 +76,7 @@ local function show_send_buffer()
     log(serpent.block(storage.send_buffer))
 end
 
+---@return nil
 local function show_send_data()
     local data = buffer.collect_send_data()
 
@@ -87,24 +86,102 @@ local function show_send_data()
     log(serpent.block(data))
 end
 
+---@return nil
+local function clear_active_deliveries()
+
+    storage.active_deliveries = {}
+
+    game.print("Active deliveries storage cleared.")
+    log("========== ACTIVE DELIVERIES CLEARED ==========")
+end
+
+---@return nil
+local function clear_send_buffer()
+
+    buffer.clear_send_buffer()
+
+    game.print("Send buffer cleared.")
+    log("========== SEND BUFFER CLEARED ==========")
+end
+
+---@param order_id string|number|nil
+---@return nil
+local function show_order(order_id)
+    storage_api.ensure()
+
+    order_id = tonumber(order_id)
+
+    if not order_id then
+        game.print("Invalid order id.")
+        return
+    end
+
+    local found = false
+
+    -- Ищем сам Order
+    for _, order in ipairs(
+        storage.send_buffer.orders
+    ) do
+
+        if order.id == order_id then
+            found = true
+            game.print("========== ORDER ==========\n" .. serpent.block(order))
+            break
+        end
+    end
+
+    -- Ищем Actions этого Order
+    local order_actions = {}
+
+    for _, action in ipairs(
+        storage.send_buffer.actions
+    ) do
+
+        if action.order_id == order_id then
+            table.insert(order_actions, action)
+        end
+    end
+
+    if #order_actions > 0 then
+        found = true
+        game.print("========== ACTIONS ==========\n" .. serpent.block(order_actions))
+    end
+
+    if not found then
+        game.print("Order not found in send buffer: " .. tostring(order_id))
+    end
+end
+
+-- Связующие функции для отладки
+---@return nil
 function debug.show_active_deliveries()
     show_active_deliveries()
 end
 
+---@return nil
 function debug.clear_active_deliveries()
-    storage.active_deliveries = {}
-
-    game.print("Active deliveries storage cleared.")
-
-    log("========== ACTIVE DELIVERIES CLEARED ==========")
+    clear_active_deliveries()
 end
 
+---@return nil
 function debug.show_send_buffer()
     show_send_buffer()
 end
 
+---@return nil
 function debug.show_send_data()
     show_send_data()
+end
+
+---@return nil
+function debug.clear_send_buffer()
+    clear_send_buffer()
+end
+
+---@param order_id string|number|nil
+---@return nil
+function debug.show_order(order_id)
+    show_order(order_id)
 end
 
 return debug

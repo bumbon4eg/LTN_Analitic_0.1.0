@@ -1,20 +1,41 @@
 local tools = require("tools")
 local buffer = require("buffer")
+local storage_api = require("storage")
 
 local LTN_INTERFACE = "logistic-train-network"
 
 local actions = {}
 
--- Функции для хранения активных доставок
+local ACTION = {
+    CREATE = "create",
+    ACCEPT = "accept",
+    FAILED = "error",
+    REASSIGNED = "reassigned",
+    COMPLETE = "complete"
+}
+
+local DELIVERY_STATE = {
+    CREATED = "created",
+    ACCEPTED = "accepted"
+}
+
+---@return nil
 local function ensure_storage()
-    storage.active_deliveries = storage.active_deliveries or {}
+    storage_api.ensure()
 end
 
+---@param train_id TrainId
+---@return ActiveDelivery|nil
 local function get_active_delivery(train_id)
     ensure_storage()
     return storage.active_deliveries[train_id]
 end
 
+---@param train_id TrainId
+---@param delivery_data DeliveryData
+---@param order_id OrderId
+---@param state DeliveryState
+---@return nil
 local function set_active_delivery(train_id, delivery_data, order_id, state)
     ensure_storage()
 
@@ -25,12 +46,17 @@ local function set_active_delivery(train_id, delivery_data, order_id, state)
     }
 end
 
+---@param train_id TrainId
+---@return nil
 local function remove_active_delivery(train_id)
     ensure_storage()
 
     storage.active_deliveries[train_id] = nil
 end
 
+---@param train_id TrainId
+---@param state DeliveryState
+---@return boolean
 local function set_active_state(train_id, state)
     local active = get_active_delivery(train_id)
 
@@ -42,6 +68,9 @@ local function set_active_state(train_id, state)
     return true
 end
 
+---@param train_id TrainId
+---@param expected_states DeliveryState[]
+---@return ActiveDelivery|nil
 local function check_state(train_id, expected_states)
     local active = get_active_delivery(train_id)
 
@@ -62,6 +91,10 @@ local function check_state(train_id, expected_states)
     return nil
 end
 
+---@param order_id OrderId
+---@param action_name ActionName
+---@param delivery_data DeliveryData
+---@return ActionData|nil
 local function get_action_payload(order_id, action_name, delivery_data)
     if not delivery_data then
         return nil
@@ -75,6 +108,9 @@ local function get_action_payload(order_id, action_name, delivery_data)
     )
 end
 
+---@param label string
+---@param payload table|nil
+---@return nil
 local function log_payload(label, payload)
     if payload then
         log("========== " .. label .. " ==========")
@@ -82,30 +118,54 @@ local function log_payload(label, payload)
     end
 end
 
+---@param order_id OrderId
+---@param action_name ActionName
+---@param delivery_data DeliveryData
+---@param log_label string
+---@return ActionData|nil
+local function record_action(order_id, action_name, delivery_data, log_label)
+    local action = get_action_payload(
+        order_id,
+        action_name,
+        delivery_data
+    )
+
+    if not action then
+        return nil
+    end
+
+    log_payload(log_label, action)
+    buffer.buffer_action(action)
+
+    return action
+end
+
 -- Обработка событий
+---@param event LtnTrainDeliveryEvent
+---@return nil
 local function on_delivery_completed(event)
     log("========== LTN DELIVERY COMPLETED ==========")
 
     local train_id = event.train_id
-    local active = check_state(train_id, {"accepted"})
+    local active = check_state(train_id, {DELIVERY_STATE.ACCEPTED})
 
     if not active then
         return
     end
 
-    local action = get_action_payload(
+    record_action(
         active.order_id,
-        "complete",
-        active.delivery
+        ACTION.COMPLETE,
+        active.delivery,
+        "COMPLETE ACTION"
     )
-
-    log_payload("COMPLETE ACTION", action)
-
-    buffer.buffer_action(action)
 
     remove_active_delivery(train_id)
 end
 
+---@param train_id TrainId
+---@param delivery_data DeliveryData
+---@return nil
 local function on_delivery_created(train_id, delivery_data)
 
     if not delivery_data then
@@ -141,18 +201,11 @@ local function on_delivery_created(train_id, delivery_data)
     -- ACTION: CREATE
     -- ========================================
 
-    local action = get_action_payload(
-        order_id,
-        "create",
-        delivery_data
-    )
-
     -- ========================================
     -- TRAIN
     -- ========================================
 
-    local train_data =
-        tools.get_train_data(train_id)
+    local train_data = tools.get_train_data(train_id)
 
     -- ========================================
     -- STATIONS
@@ -169,7 +222,7 @@ local function on_delivery_created(train_id, delivery_data)
         train_id,
         delivery_data,
         order_id,
-        "created"
+        DELIVERY_STATE.CREATED
     )
 
     -- ========================================
@@ -177,15 +230,21 @@ local function on_delivery_created(train_id, delivery_data)
     -- ========================================
 
     buffer.buffer_order(order)
-    buffer.buffer_action(action)
-    buffer.buffer_train(tools.get_train_data(train_id))
-    buffer.buffer_station(tools.get_station_data(delivery_data.from_id))
-    buffer.buffer_station(tools.get_station_data(delivery_data.to_id))
+    record_action(
+        order_id,
+        ACTION.CREATE,
+        delivery_data,
+        "CREATE ACTION"
+    )
+    buffer.buffer_train(train_data)
+    buffer.buffer_station(from_station)
+    buffer.buffer_station(to_station)
 
     log_payload("ORDER CREATED", order)
-    log_payload("CREATE ACTION", action)
 end
 
+---@param event LtnDispatcherUpdatedEvent
+---@return nil
 local function on_dispatcher_updated(event)
     local new_deliveries = event.new_deliveries or {}
     local deliveries = event.deliveries or {}
@@ -199,52 +258,55 @@ local function on_dispatcher_updated(event)
     end
 end
 
+---@param event LtnTrainDeliveryEvent
+---@return nil
 local function on_delivery_pickup_complete(event)
     log("========== LTN PICKUP COMPLETE ==========")
 
     local train_id = event.train_id
-    local active = check_state(train_id, {"created"})
+    local active = check_state(train_id, {DELIVERY_STATE.CREATED})
 
     if not active then
         return
     end
 
-    local action = get_action_payload(
+    record_action(
         active.order_id,
-        "accept",
-        active.delivery
+        ACTION.ACCEPT,
+        active.delivery,
+        "ACCEPT ACTION"
     )
 
-    log_payload("ACCEPT ACTION", action)
-
-    buffer.buffer_action(action)
-
-    set_active_state(train_id, "accepted")
+    set_active_state(train_id, DELIVERY_STATE.ACCEPTED)
 end
 
+---@param event LtnTrainDeliveryEvent
+---@return nil
 local function on_delivery_failed(event)
     log("========== LTN DELIVERY FAILED ==========")
 
     local train_id = event.train_id
-    local active = check_state(train_id, {"created", "accepted", "reassigned"})
+    local active = check_state(
+        train_id,
+        {DELIVERY_STATE.CREATED, DELIVERY_STATE.ACCEPTED}
+    )
 
     if not active then
         return
     end
 
-    local action = get_action_payload(
+    record_action(
         active.order_id,
-        "error",
-        active.delivery
+        ACTION.FAILED,
+        active.delivery,
+        "ERROR ACTION"
     )
-
-    log_payload("ERROR ACTION", action)
-
-    buffer.buffer_action(action)
 
     remove_active_delivery(train_id)
 end
 
+---@param event LtnDeliveryReassignedEvent
+---@return nil
 local function on_delivery_reassigned(event)
     log("========== LTN DELIVERY REASSIGNED ==========")
 
@@ -260,15 +322,12 @@ local function on_delivery_reassigned(event)
         return
     end
 
-    local action = get_action_payload(
+    record_action(
         old_active.order_id,
-        "reassigned",
-        old_active.delivery
+        ACTION.REASSIGNED,
+        old_active.delivery,
+        "REASSIGNED ACTION"
     )
-
-    log_payload("REASSIGNED ACTION", action)
-
-    buffer.buffer_action(action)
     buffer.buffer_train(tools.get_train_data(new_train_id))
 
     -- Перенос активной доставки на новый поезд
@@ -276,11 +335,16 @@ local function on_delivery_reassigned(event)
     storage.active_deliveries[new_train_id] = old_active
 end
 
-local function on_dispatcher_no_train_found()
+---@param event LtnDispatcherNoTrainFoundEvent
+---@return nil
+local function on_dispatcher_no_train_found(event)
     log("========== LTN DISPATCHER NO TRAIN FOUND ==========")
 end
 
 -- Связующие функции
+---@param event_name LtnRemoteEventName
+---@param callback fun(event: table): nil
+---@return boolean
 local function register_ltn_event(event_name, callback)
     if not remote.interfaces[LTN_INTERFACE] then
         return false
@@ -292,6 +356,8 @@ local function register_ltn_event(event_name, callback)
         return false
     end
 
+    -- LTN is an external remote interface, so LuaLS cannot infer its method keys.
+    ---@diagnostic disable-next-line: param-type-mismatch
     local event_id = remote.call(LTN_INTERFACE, event_name)
 
     if event_id then
@@ -302,18 +368,47 @@ local function register_ltn_event(event_name, callback)
     return false
 end
 
+---@return nil
 function actions.register_ltn_events()
+
+    log("========== REGISTERING LTN EVENTS ==========")
+
     if not remote.interfaces[LTN_INTERFACE] then
         log("LTN interface not found")
         return
     end
 
-    register_ltn_event("on_dispatcher_updated", on_dispatcher_updated)
-    register_ltn_event("on_delivery_pickup_complete", on_delivery_pickup_complete)
-    register_ltn_event("on_delivery_failed", on_delivery_failed)
-    register_ltn_event("on_delivery_reassigned", on_delivery_reassigned)
-    register_ltn_event("on_dispatcher_no_train_found", on_dispatcher_no_train_found)
-    register_ltn_event("on_delivery_completed", on_delivery_completed)
+    local events = {
+        {
+            name = "on_dispatcher_updated",
+            callback = on_dispatcher_updated
+        },
+        {
+            name = "on_delivery_pickup_complete",
+            callback = on_delivery_pickup_complete
+        },
+        {
+            name = "on_delivery_failed",
+            callback = on_delivery_failed
+        },
+        {
+            name = "on_delivery_reassigned",
+            callback = on_delivery_reassigned
+        },
+        {
+            name = "on_dispatcher_no_train_found",
+            callback = on_dispatcher_no_train_found
+        },
+        {
+            name = "on_delivery_completed",
+            callback = on_delivery_completed
+        }
+    }
+
+    for _, event_data in ipairs(events) do
+        local registered = register_ltn_event(event_data.name, event_data.callback)
+        log("LTN event " .. event_data.name .. ": " .. tostring(registered))
+    end
 end
 
 return actions

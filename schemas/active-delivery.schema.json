@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "active-delivery.schema.json",
+  "title": "Active Delivery",
+  "description": "Persistent delivery state indexed by train ID.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["delivery", "order_id", "state"],
+  "properties": {
+    "delivery": { "$ref": "delivery-data.schema.json" },
+    "order_id": { "type": "integer", "minimum": 1 },
+    "state": {
+      "type": "string",
+      "enum": ["created", "accepted"]
+    }
+  }
+}

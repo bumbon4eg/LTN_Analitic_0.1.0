@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "station-data.schema.json",
+  "title": "Station Data",
+  "description": "A serializable train station snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "position", "planet"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string" },
+    "position": { "$ref": "position.schema.json" },
+    "planet": { "type": ["string", "null"] }
+  }
+}

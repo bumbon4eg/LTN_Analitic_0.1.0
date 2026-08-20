@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ltn-delivery-reassigned-event.schema.json",
+  "title": "LTN Delivery Reassigned Event",
+  "description": "LTN reassignment event consumed by actions.on_delivery_reassigned().",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["old_train_id", "new_train_id"],
+  "properties": {
+    "old_train_id": { "type": "integer", "minimum": 1 },
+    "new_train_id": { "type": "integer", "minimum": 1 }
+  }
+}

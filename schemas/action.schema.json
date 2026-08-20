@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "action.schema.json",
+  "title": "Action",
+  "description": "A recorded action in an LTN order lifecycle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["order_id", "action", "from_id", "to_id"],
+  "properties": {
+    "order_id": { "type": "integer", "minimum": 1 },
+    "action": {
+      "type": "string",
+      "enum": ["create", "accept", "error", "reassigned", "complete"]
+    },
+    "from_id": { "type": ["integer", "null"] },
+    "to_id": { "type": ["integer", "null"] }
+  }
+}

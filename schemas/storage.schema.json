@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "storage.schema.json",
+  "title": "Persistent Mod Storage",
+  "description": "Persistent state initialized by storage_api.ensure().",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["active_deliveries", "send_buffer", "next_order_id"],
+  "properties": {
+    "active_deliveries": { "$ref": "active-deliveries.schema.json" },
+    "send_buffer": { "$ref": "send-buffer.schema.json" },
+    "next_order_id": { "type": "integer", "minimum": 1 }
+  }
+}

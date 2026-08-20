@@ -1,42 +1,95 @@
+---@type ActionsModule
 local actions = require("actions")
-local debug = require("debug")
 
+---@type DebugModule
+---@diagnostic disable-next-line: assign-type-mismatch
+local debug_api = require("debug")
+
+---@return nil
 script.on_init(function()
     actions.register_ltn_events()
 end)
 
+---@return nil
 script.on_configuration_changed(function()
     actions.register_ltn_events()
 end)
 
+---@return nil
+script.on_load(function()
+    actions.register_ltn_events()
+end)
+
+
+-- ========================================
+-- ACTIVE ORDERS
+-- ========================================
+
 commands.add_command(
     "ltn_debug_orders",
     "Show active LTN orders",
+    ---@return nil
     function()
-        debug.show_active_deliveries()
+        debug_api.show_active_deliveries()
     end
 )
+
 
 commands.add_command(
     "ltn_clear_active",
     "Clear active LTN deliveries",
+    ---@return nil
     function()
-        debug.clear_active_deliveries()
+        debug_api.clear_active_deliveries()
     end
 )
+
+
+-- ========================================
+-- SEND BUFFER
+-- ========================================
 
 commands.add_command(
     "ltn_debug_buffer",
     "Show LTN send buffer",
+    ---@return nil
     function()
-        debug.show_send_buffer()
+        debug_api.show_send_buffer()
     end
 )
+
 
 commands.add_command(
     "ltn_debug_send_data",
     "Show collected data for sending",
+    ---@return nil
     function()
-        debug.show_send_data()
+        debug_api.show_send_data()
+    end
+)
+
+
+commands.add_command(
+    "ltn_clear_buffer",
+    "Clear LTN send buffer",
+    ---@return nil
+    function()
+        debug_api.clear_send_buffer()
+    end
+)
+
+
+-- ========================================
+-- ORDER
+-- ========================================
+
+commands.add_command(
+    "ltn_debug_order",
+    "Show Order and its Actions",
+    ---@param command table
+    ---@return nil
+    function(command)
+        debug_api.show_order(command.parameter)
+
     end
 )

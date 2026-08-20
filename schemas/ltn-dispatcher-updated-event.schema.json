@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ltn-dispatcher-updated-event.schema.json",
+  "title": "LTN Dispatcher Updated Event",
+  "description": "Dispatcher event consumed by actions.on_dispatcher_updated().",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["new_deliveries", "deliveries"],
+  "properties": {
+    "new_deliveries": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 }
+    },
+    "deliveries": {
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "delivery-data.schema.json" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

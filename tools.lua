@@ -1,5 +1,7 @@
 local tools = {}
 
+---@param train_id TrainId
+---@return TrainData|nil
 function tools.get_train_data(train_id)
     local train = game.train_manager.get_train_by_id(train_id)
 
@@ -150,6 +152,8 @@ function tools.get_train_data(train_id)
     return data
 end
 
+---@param train_id TrainId
+---@return CargoData|nil
 function tools.get_train_cargo(train_id)
 
     local train = game.train_manager.get_train_by_id(train_id)
@@ -195,6 +199,8 @@ function tools.get_train_cargo(train_id)
     return cargo
 end
 
+---@param station_id StationId
+---@return StationData|nil
 function tools.get_station_data(station_id)
 
     local station = game.get_entity_by_unit_number(station_id)
@@ -234,6 +240,11 @@ function tools.get_station_data(station_id)
     return data
 end
 
+---@param order_id OrderId
+---@param action ActionName
+---@param from_id StationId|nil
+---@param to_id StationId|nil
+---@return ActionData
 function tools.get_action_data(order_id, action, from_id, to_id)
     return {
         order_id = order_id,
@@ -243,6 +254,12 @@ function tools.get_action_data(order_id, action, from_id, to_id)
     }
 end
 
+---@param order_id OrderId
+---@param train_id TrainId
+---@param creation_time Tick
+---@param network_id NetworkId
+---@param current_cargo CargoData|nil
+---@return OrderData
 function tools.get_order_data(order_id, train_id, creation_time, network_id, current_cargo)
     return {
         id = order_id,

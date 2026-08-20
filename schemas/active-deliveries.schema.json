@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "active-deliveries.schema.json",
+  "title": "Active Deliveries",
+  "description": "Active deliveries indexed by train ID.",
+  "type": "object",
+  "patternProperties": {
+    "^[0-9]+$": { "$ref": "active-delivery.schema.json" }
+  },
+  "additionalProperties": false
+}

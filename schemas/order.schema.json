@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "order.schema.json",
+  "title": "Order",
+  "description": "An order created from a new LTN delivery.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "train_id", "creation_time", "network_id", "current_cargo"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "train_id": { "type": "integer", "minimum": 1 },
+    "creation_time": { "type": "integer", "minimum": 0 },
+    "network_id": { "type": "integer" },
+    "current_cargo": {
+      "$ref": "cargo.schema.json"
+    }
+  }
+}

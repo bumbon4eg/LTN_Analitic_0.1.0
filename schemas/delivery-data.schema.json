@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "delivery-data.schema.json",
+  "title": "LTN Delivery Data",
+  "description": "Delivery data received from the LTN remote interface. Additional LTN fields are preserved.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["from_id", "to_id", "started", "network_id"],
+  "properties": {
+    "from_id": { "type": "integer", "minimum": 1 },
+    "to_id": { "type": "integer", "minimum": 1 },
+    "started": { "type": "integer", "minimum": 0 },
+    "network_id": { "type": "integer" }
+  }
+}

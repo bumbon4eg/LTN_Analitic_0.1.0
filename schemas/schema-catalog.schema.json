@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schema-catalog.schema.json",
+  "title": "LTN Analytic Schema Catalog",
+  "description": "Catalog of JSON schemas used to describe project data structures.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemas"],
+  "properties": {
+    "schemas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "action.schema.json",
+          "order.schema.json",
+          "cargo.schema.json",
+          "position.schema.json",
+          "station-data.schema.json",
+          "train-data.schema.json",
+          "delivery-data.schema.json",
+          "active-delivery.schema.json",
+          "active-deliveries.schema.json",
+          "send-buffer.schema.json",
+          "send-data.schema.json",
+          "storage.schema.json",
+          "ltn-dispatcher-updated-event.schema.json",
+          "ltn-train-delivery-event.schema.json",
+          "ltn-delivery-reassigned-event.schema.json"
+        ]
+      },
+      "uniqueItems": true
+    }
+  }
+}

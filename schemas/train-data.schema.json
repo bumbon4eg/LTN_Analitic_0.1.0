@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "train-data.schema.json",
+  "title": "Train Data",
+  "description": "A serializable train snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "length", "wagons_types", "fuel", "name", "planet"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "length": { "type": "string", "pattern": "^[0-9]+-[0-9]+-[0-9]+$" },
+    "wagons_types": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "fuel": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "name": { "type": ["string", "null"] },
+    "planet": { "type": ["string", "null"] }
+  }
+}

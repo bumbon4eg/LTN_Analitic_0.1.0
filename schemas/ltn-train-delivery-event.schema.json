@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ltn-train-delivery-event.schema.json",
+  "title": "LTN Train Delivery Event",
+  "description": "LTN event containing a train ID.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["train_id"],
+  "properties": {
+    "train_id": { "type": "integer", "minimum": 1 }
+  }
+}
