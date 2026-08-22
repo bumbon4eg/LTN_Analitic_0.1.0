@@ -1,5 +1,6 @@
 local buffer = require("buffer")
 local storage_api = require("storage")
+local jsonl = require("jsonl")
 
 local debug = {}
 
@@ -149,6 +150,18 @@ local function show_order(order_id)
 
     if not found then
         game.print("Order not found in send buffer: " .. tostring(order_id))
+    end
+end
+
+---@return nil
+function debug.write_jsonl_now()
+
+    local success = jsonl.write()
+
+    if success then
+        game.print("JSONL packet written.")
+    else
+        game.print("JSONL buffer is empty.")
     end
 end
 

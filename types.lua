@@ -8,9 +8,12 @@
 ---@alias OrderId uint
 ---@alias Tick uint
 ---@alias NetworkId integer
+---@alias SequenceId uint
 ---@alias ActionName "create"|"accept"|"error"|"reassigned"|"complete"
 ---@alias DeliveryState "created"|"accepted"
 ---@alias LtnRemoteEventName "on_dispatcher_updated"|"on_delivery_pickup_complete"|"on_delivery_failed"|"on_delivery_reassigned"|"on_dispatcher_no_train_found"|"on_delivery_completed"
+
+---@alias JsonlWriteResult boolean
 
 ---@alias ItemOrFluidName string
 ---@alias CargoAmount number
@@ -78,10 +81,23 @@
 ---@field trains TrainData[]
 ---@field stations StationData[]
 
+---@class JsonlPacket
+---@field protocol_version integer
+---@field sequence SequenceId
+---@field tick Tick
+---@field orders OrderData[]
+---@field actions ActionData[]
+---@field trains TrainData[]
+---@field stations StationData[]
+
+---@class JsonlStorage
+---@field sequence SequenceId
+
 ---@class PersistentStorage
 ---@field active_deliveries ActiveDeliveries
 ---@field send_buffer SendBuffer
 ---@field next_order_id OrderId
+---@field jsonl JsonlStorage
 
 ---@class LtnDispatcherUpdatedEvent
 ---@field new_deliveries TrainId[]
@@ -137,6 +153,10 @@
 ---@class StorageModule
 ---@field ensure fun()
 
+---@class JsonlModule
+---@field write fun(): JsonlWriteResult
+---@field register fun(): nil
+
 ---@class DebugModule
 ---@field show_active_deliveries fun()
 ---@field clear_active_deliveries fun()
@@ -144,6 +164,7 @@
 ---@field show_send_data fun()
 ---@field clear_send_buffer fun()
 ---@field show_order fun(order_id: string|number|nil)
+---@field write_jsonl_now fun()
 
 ---@class ToolsModule
 ---@field get_train_data fun(train_id: TrainId): TrainData|nil

@@ -5,19 +5,25 @@ local actions = require("actions")
 ---@diagnostic disable-next-line: assign-type-mismatch
 local debug_api = require("debug")
 
+---@type JsonlModule
+local jsonl = require("jsonl")
+
 ---@return nil
 script.on_init(function()
     actions.register_ltn_events()
+    jsonl.register()
 end)
 
 ---@return nil
 script.on_configuration_changed(function()
     actions.register_ltn_events()
+    jsonl.register()
 end)
 
 ---@return nil
 script.on_load(function()
     actions.register_ltn_events()
+    jsonl.register()
 end)
 
 
@@ -90,6 +96,20 @@ commands.add_command(
     ---@return nil
     function(command)
         debug_api.show_order(command.parameter)
+    end
+)
 
+
+-- ========================================
+-- JSONL
+-- ========================================
+
+commands.add_command(
+    "ltn_write_jsonl",
+    "Write current buffer to JSONL",
+    ---@return nil
+    function()
+        ---@diagnostic disable-next-line: undefined-field
+        debug_api.write_jsonl_now()
     end
 )
