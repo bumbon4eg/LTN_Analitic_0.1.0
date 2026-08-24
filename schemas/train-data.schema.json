@@ -5,18 +5,20 @@
   "description": "A serializable train snapshot.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "length", "wagons_types", "fuel", "name", "planet"],
+  "required": ["id", "length", "composition_summary", "fuel", "name", "planet"],
   "properties": {
     "id": { "type": "integer", "minimum": 1 },
     "length": { "type": "string", "pattern": "^[0-9]+-[0-9]+-[0-9]+$" },
-    "wagons_types": {
-      "type": "array",
-      "items": { "type": "string" },
-      "uniqueItems": true
+    "composition_summary": {
+      "type": "object",
+      "patternProperties": {
+        "^.+$": { "$ref": "wagon-summary.schema.json" }
+      },
+      "additionalProperties": false
     },
     "fuel": {
-      "type": "object",
-      "additionalProperties": { "type": "number", "minimum": 0 }
+      "type": "array",
+      "items": { "$ref": "count-data.schema.json" }
     },
     "name": { "type": ["string", "null"] },
     "planet": { "type": ["string", "null"] }

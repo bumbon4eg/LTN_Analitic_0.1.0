@@ -2,13 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "cargo.schema.json",
   "title": "Train Cargo",
-  "description": "Cargo snapshot keyed by item or fluid name.",
-  "type": "object",
-  "propertyNames": {
-    "pattern": "^(item|fluid),.+$"
-  },
-  "additionalProperties": {
-    "type": "number",
-    "minimum": 0
-  }
+  "description": "Order content represented as typed count records.",
+  "type": "array",
+  "items": { "$ref": "count-data.schema.json" }
 }

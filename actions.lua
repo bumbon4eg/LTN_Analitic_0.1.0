@@ -172,9 +172,9 @@ local function on_delivery_created(train_id, delivery_data)
         return
     end
 
-    local current_cargo = tools.get_train_cargo(train_id)
+    local order_content = tools.get_train_cargo(train_id)
 
-    if not current_cargo then
+    if not order_content then
         log("Could not get cargo for train: " .. tostring(train_id))
         return
     end
@@ -186,26 +186,28 @@ local function on_delivery_created(train_id, delivery_data)
     storage.next_order_id = storage.next_order_id + 1
 
     -- ========================================
+    -- TRAIN
+    -- ========================================
+
+    local train_data = tools.get_train_data(train_id)
+
+    if not train_data then
+        log("Could not get train data for train: " .. tostring(train_id))
+        return
+    end
+
+    -- ========================================
     -- ORDER
     -- ========================================
 
     local order = tools.get_order_data(
         order_id,
-        train_id,
+        storage.world_id,
         delivery_data.started,
         delivery_data.network_id,
-        current_cargo
+        train_data,
+        order_content
     )
-
-    -- ========================================
-    -- ACTION: CREATE
-    -- ========================================
-
-    -- ========================================
-    -- TRAIN
-    -- ========================================
-
-    local train_data = tools.get_train_data(train_id)
 
     -- ========================================
     -- STATIONS

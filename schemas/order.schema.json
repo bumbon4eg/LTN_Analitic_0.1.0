@@ -5,14 +5,23 @@
   "description": "An order created from a new LTN delivery.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "train_id", "creation_time", "network_id", "current_cargo"],
+  "required": ["id", "world_id", "creation_time", "network_id", "train_snapshot", "order_content"],
   "properties": {
     "id": { "type": "integer", "minimum": 1 },
-    "train_id": { "type": "integer", "minimum": 1 },
-    "creation_time": { "type": "integer", "minimum": 0 },
+    "world_id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+    },
+    "creation_time": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Factorio game tick; convert to a database timestamp at ingestion."
+    },
     "network_id": { "type": "integer" },
-    "current_cargo": {
-      "$ref": "cargo.schema.json"
+    "train_snapshot": { "$ref": "train-data.schema.json" },
+    "order_content": {
+      "type": "array",
+      "items": { "$ref": "count-data.schema.json" }
     }
   }
 }

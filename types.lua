@@ -10,6 +10,7 @@
 ---@alias NetworkId integer
 ---@alias SequenceId uint
 ---@alias WorldId string
+---@alias UUID_V4 string
 ---@alias ActionName "create"|"accept"|"error"|"reassigned"|"complete"
 ---@alias DeliveryState "created"|"accepted"
 ---@alias LtnRemoteEventName "on_dispatcher_updated"|"on_delivery_pickup_complete"|"on_delivery_failed"|"on_delivery_reassigned"|"on_dispatcher_no_train_found"|"on_delivery_completed"
@@ -20,18 +21,29 @@
 ---@alias CargoAmount number
 ---@alias FuelAmount number
 
+---@class CountData
+---@field type string
+---@field count number
+
+---@class ContentData
+---@field [string] number # Item or fluid name mapped to its amount.
+
+---@class WagonSummary
+---@field count number
+---@field content ContentData
+
 ---@class PositionData
 ---@field x number
 ---@field y number
 
 ---@class CargoData
----@field [string] CargoAmount # Keys are expected to have the form `item,<name>` or `fluid,<name>`.
+---@field [integer] CountData # `type` is the item or fluid name without a type prefix.
 
 ---@class TrainData
 ---@field id TrainId
----@field length string # Format: `<front locomotives>-<wagons>-<rear locomotives>`.
----@field wagons_types string[] # Unique carriage prototype names.
----@field fuel table<ItemOrFluidName, FuelAmount>
+---@field length string # Format: `N-n-N`.
+---@field composition_summary table<string, WagonSummary> # Keyed by wagon prototype name.
+---@field fuel CountData[] # Aggregated fuel names and counts.
 ---@field name string|nil # Leading locomotive name, when available.
 ---@field planet string|nil # Planet name or surface name.
 
@@ -46,14 +58,15 @@
 ---@field to_id StationId
 ---@field started Tick
 ---@field network_id NetworkId
----@field [string] any # Additional fields provided by LTN (not used in current logic).
+---@field [string] any # Additional LTN fields not used by current logic.
 
 ---@class OrderData
 ---@field id OrderId
----@field train_id TrainId
----@field creation_time Tick
+---@field world_id WorldId
+---@field creation_time Tick # QUESTION: Confirm DB-side conversion from Factorio tick to datestamp.
 ---@field network_id NetworkId
----@field current_cargo CargoData
+---@field train_snapshot TrainData
+---@field order_content CargoData # Aggregated item/fluid names and amounts.
 
 ---@class ActionData
 ---@field order_id OrderId
@@ -94,9 +107,9 @@
 
 ---@class JsonlStorage
 ---@field sequence SequenceId
----@field world_id WorldId|nil
 
 ---@class PersistentStorage
+---@field world_id WorldId
 ---@field active_deliveries ActiveDeliveries
 ---@field send_buffer SendBuffer
 ---@field next_order_id OrderId
@@ -155,12 +168,20 @@
 
 ---@class StorageModule
 ---@field ensure fun()
+---@field ensure_world_id fun(force: boolean|nil): WorldId
+---@field is_valid_world_id fun(world_id: string|nil): boolean
+
+---@class UUIDModule
+---@field new fun(): UUID_V4
 
 ---@class JsonlModule
 ---@field write fun(): JsonlWriteResult
+---@field build_packet fun(): JsonlPacket
 ---@field register fun(): nil
 
 ---@class DebugModule
+---@field show_world_id fun()
+---@field regenerate_world_id fun()
 ---@field show_active_deliveries fun()
 ---@field clear_active_deliveries fun()
 ---@field show_send_buffer fun()
@@ -174,5 +195,5 @@
 ---@field get_train_cargo fun(train_id: TrainId): CargoData|nil
 ---@field get_station_data fun(station_id: StationId): StationData|nil
 ---@field get_action_data fun(order_id: OrderId, action: ActionName, from_id: StationId|nil, to_id: StationId|nil): ActionData
----@field get_order_data fun(order_id: OrderId, train_id: TrainId, creation_time: Tick, network_id: NetworkId, current_cargo: CargoData|nil): OrderData
+---@field get_order_data fun(order_id: OrderId, world_id: WorldId, creation_time: Tick, network_id: NetworkId, train_snapshot: TrainData, order_content: CargoData): OrderData
 

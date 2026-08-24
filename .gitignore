@@ -25,6 +25,7 @@ lua_modules/
 *.dll
 
 # Файлы тестирования и кэша
+.dev/
 .busted
 .luacov
 luacov.stats.out

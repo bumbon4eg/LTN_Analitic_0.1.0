@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wagon-summary.schema.json",
+  "title": "Wagon Summary",
+  "description": "Aggregated snapshot of wagons with the same prototype name. The prototype name is the parent object key.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["count", "content"],
+  "properties": {
+    "count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      },
+      "description": "Item or fluid names mapped directly to their aggregated amounts."
+    }
+  }
+}

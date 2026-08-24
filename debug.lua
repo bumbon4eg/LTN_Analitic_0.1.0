@@ -5,6 +5,22 @@ local jsonl = require("jsonl")
 local debug = {}
 
 ---@return nil
+function debug.show_world_id()
+    local world_id = storage_api.ensure_world_id()
+
+    game.print("World ID: " .. world_id)
+    log("World ID: " .. world_id)
+end
+
+---@return nil
+function debug.regenerate_world_id()
+    local world_id = storage_api.ensure_world_id(true)
+
+    game.print("World ID regenerated: " .. world_id)
+    log("World ID regenerated: " .. world_id)
+end
+
+---@return nil
 local function show_active_deliveries()
     storage_api.ensure()
 

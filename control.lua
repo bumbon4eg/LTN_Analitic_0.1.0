@@ -1,5 +1,6 @@
 ---@type ActionsModule
 local actions = require("actions")
+local storage_api = require("storage")
 
 ---@type DebugModule
 ---@diagnostic disable-next-line: assign-type-mismatch
@@ -10,6 +11,7 @@ local jsonl = require("jsonl")
 
 ---@return nil
 script.on_init(function()
+    storage_api.ensure_world_id()
     actions.register_ltn_events()
     jsonl.register()
 end)
@@ -30,6 +32,24 @@ end)
 -- ========================================
 -- ACTIVE ORDERS
 -- ========================================
+
+commands.add_command(
+    "ltn_debug_world_id",
+    "Show persistent world ID",
+    ---@return nil
+    function()
+        debug_api.show_world_id()
+    end
+)
+
+commands.add_command(
+    "ltn_regenerate_world_id",
+    "Generate a new persistent world ID",
+    ---@return nil
+    function()
+        debug_api.regenerate_world_id()
+    end
+)
 
 commands.add_command(
     "ltn_debug_orders",

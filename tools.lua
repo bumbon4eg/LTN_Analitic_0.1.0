@@ -1,5 +1,46 @@
 local tools = {}
 
+---@param content ContentData
+---@param content_name string
+---@param amount number
+---@return nil
+local function add_content(content, content_name, amount)
+    content[content_name] =
+        (content[content_name] or 0) + amount
+end
+
+---@param content ContentData
+---@param inventory LuaInventory|nil
+---@return nil
+local function add_inventory_content(content, inventory)
+    if not inventory then
+        return
+    end
+
+    for name, count in pairs(inventory.get_contents()) do
+        if type(count) == "table" then
+            add_content(content, count.name, count.count)
+        else
+            ---@type any
+            local numeric_count = count
+            add_content(content, tostring(name), numeric_count)
+        end
+    end
+end
+
+---@param content ContentData
+---@param fluid_contents table<string, number|table>
+---@return nil
+local function add_fluid_content(content, fluid_contents)
+    for name, amount in pairs(fluid_contents) do
+        if type(amount) == "table" then
+            add_content(content, name, amount.amount)
+        else
+            add_content(content, name, amount)
+        end
+    end
+end
+
 ---@param train_id TrainId
 ---@return TrainData|nil
 function tools.get_train_data(train_id)
@@ -12,7 +53,7 @@ function tools.get_train_data(train_id)
     local data = {
         id = train.id,
         length = "",
-        wagons_types = {},
+        composition_summary = {},
         fuel = {},
         name = nil,
         planet = nil
@@ -113,20 +154,45 @@ function tools.get_train_data(train_id)
     .. tostring(rear_locomotives)
 
     -- ========================================
-    -- ТИПЫ ВАГОНОВ И ТОПЛИВО ЛОКОМОТИВОВ
+    -- СВОДКА СОСТАВА И ТОПЛИВО
     -- ========================================
 
-    local wagon_types_set = {}
+    local composition_summary = {}
+    local fuel_counts = {}
 
     for _, carriage in ipairs(train.carriages) do
 
-        -- Вагоны
         if carriage.type ~= "locomotive" then
             local wagon_type = carriage.name
+            local wagon_summary = composition_summary[wagon_type]
 
-            if not wagon_types_set[wagon_type] then
-                wagon_types_set[wagon_type] = true
-                table.insert(data.wagons_types, wagon_type)
+            if not wagon_summary then
+                wagon_summary = {
+                    type = wagon_type,
+                    count = 0,
+                    content = {}
+                }
+
+                composition_summary[wagon_type] = wagon_summary
+            end
+
+            wagon_summary.count = wagon_summary.count + 1
+
+            if carriage.type == "cargo-wagon" then
+                add_inventory_content(
+                    wagon_summary.content,
+                    carriage.get_inventory(defines.inventory.cargo_wagon)
+                )
+            elseif carriage.type == "fluid-wagon" then
+                add_fluid_content(
+                    wagon_summary.content,
+                    carriage.get_fluid_contents()
+                )
+            elseif carriage.type == "artillery-wagon" then
+                add_inventory_content(
+                    wagon_summary.content,
+                    carriage.get_inventory(defines.inventory.artillery_wagon_ammo)
+                )
             end
         end
 
@@ -140,13 +206,25 @@ function tools.get_train_data(train_id)
                     local stack = fuel_inventory[slot]
 
                     if stack and stack.valid_for_read then
-                        data.fuel[stack.name] =
-                            (data.fuel[stack.name] or 0)
+                        fuel_counts[stack.name] =
+                            (fuel_counts[stack.name] or 0)
                             + stack.count
                     end
                 end
             end
         end
+    end
+
+    data.composition_summary = composition_summary
+
+    for fuel_type, count in pairs(fuel_counts) do
+        table.insert(
+            data.fuel,
+            {
+                type = fuel_type,
+                count = count
+            }
+        )
     end
 
     return data
@@ -162,7 +240,7 @@ function tools.get_train_cargo(train_id)
         return nil
     end
 
-    local cargo = {}
+    local cargo_counts = {}
 
     -- ========================================
     -- ПРЕДМЕТЫ
@@ -173,9 +251,11 @@ function tools.get_train_cargo(train_id)
     for name, count in pairs(item_contents) do
 
         if type(count) == "table" then
-            cargo["item," .. count.name] = count.count
+            add_content(cargo_counts, count.name, count.count)
         else
-            cargo["item," .. name] = count
+            ---@type any
+            local numeric_count = count
+            add_content(cargo_counts, tostring(name), numeric_count)
         end
 
     end
@@ -189,11 +269,23 @@ function tools.get_train_cargo(train_id)
     for name, amount in pairs(fluid_contents) do
 
         if type(amount) == "table" then
-            cargo["fluid," .. name] = amount.amount
+            add_content(cargo_counts, name, amount.amount)
         else
-            cargo["fluid," .. name] = amount
+            add_content(cargo_counts, name, amount)
         end
 
+    end
+
+    local cargo = {}
+
+    for cargo_type, count in pairs(cargo_counts) do
+        table.insert(
+            cargo,
+            {
+                type = cargo_type,
+                count = count
+            }
+        )
     end
 
     return cargo
@@ -255,18 +347,20 @@ function tools.get_action_data(order_id, action, from_id, to_id)
 end
 
 ---@param order_id OrderId
----@param train_id TrainId
+---@param world_id WorldId
 ---@param creation_time Tick
 ---@param network_id NetworkId
----@param current_cargo CargoData|nil
+---@param train_snapshot TrainData
+---@param order_content CargoData
 ---@return OrderData
-function tools.get_order_data(order_id, train_id, creation_time, network_id, current_cargo)
+function tools.get_order_data(order_id, world_id, creation_time, network_id, train_snapshot, order_content)
     return {
         id = order_id,
-        train_id = train_id,
+        world_id = world_id,
         creation_time = creation_time,
         network_id = network_id,
-        current_cargo = current_cargo or {}
+        train_snapshot = train_snapshot,
+        order_content = order_content
     }
 end
 

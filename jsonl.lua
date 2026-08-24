@@ -1,4 +1,5 @@
 local buffer = require("buffer")
+local storage_api = require("storage")
 
 local jsonl = {}
 
@@ -11,9 +12,10 @@ local PROTOCOL_VERSION = 1
 
 ---@return nil
 local function ensure_storage()
+    storage_api.ensure()
+
     storage.jsonl = storage.jsonl or {
-        sequence = 0,
-        world_id = nil
+        sequence = 0
     }
 end
 
@@ -26,16 +28,10 @@ local function get_next_sequence()
     return storage.jsonl.sequence
 end
 
--- TODO: Возможно, стоит использовать уникальный идентификатор мира, а не строку обмена картой.
 ---@return WorldId
 local function get_world_id()
-    ensure_storage()
-
-    if not storage.jsonl.world_id then
-        storage.jsonl.world_id = game.get_map_exchange_string()
-    end
-
-    return storage.jsonl.world_id
+    storage_api.ensure_world_id()
+    return storage.world_id
 end
 
 ---@return JsonlPacket

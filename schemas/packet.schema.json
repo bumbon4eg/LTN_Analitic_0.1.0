@@ -23,7 +23,8 @@
     "world_id": {
       "type": "string",
       "minLength": 1,
-      "description": "Map exchange string identifying the Factorio world."
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "Persistent UUID v4 identifying the Factorio world."
     },
     "sequence": {
       "type": "integer",
