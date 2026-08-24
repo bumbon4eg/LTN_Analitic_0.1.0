@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "packet.schema.json",
+  "title": "LTN Analytic JSONL Packet",
+  "description": "One line written by jsonl.lua to script-output/LTN_Analitic/data.jsonl.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "world_id",
+    "sequence",
+    "tick",
+    "orders",
+    "actions",
+    "trains",
+    "stations"
+  ],
+  "properties": {
+    "protocol_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "world_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Map exchange string identifying the Factorio world."
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "orders": {
+      "type": "array",
+      "items": { "$ref": "order.schema.json" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "action.schema.json" }
+    },
+    "trains": {
+      "type": "array",
+      "items": { "$ref": "train-data.schema.json" }
+    },
+    "stations": {
+      "type": "array",
+      "items": { "$ref": "station-data.schema.json" }
+    }
+  }
+}

@@ -13,6 +13,7 @@
         "type": "string",
         "enum": [
           "action.schema.json",
+          "packet.schema.json",
           "order.schema.json",
           "cargo.schema.json",
           "position.schema.json",

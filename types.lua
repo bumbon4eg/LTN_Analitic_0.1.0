@@ -9,6 +9,7 @@
 ---@alias Tick uint
 ---@alias NetworkId integer
 ---@alias SequenceId uint
+---@alias WorldId string
 ---@alias ActionName "create"|"accept"|"error"|"reassigned"|"complete"
 ---@alias DeliveryState "created"|"accepted"
 ---@alias LtnRemoteEventName "on_dispatcher_updated"|"on_delivery_pickup_complete"|"on_delivery_failed"|"on_delivery_reassigned"|"on_dispatcher_no_train_found"|"on_delivery_completed"
@@ -83,6 +84,7 @@
 
 ---@class JsonlPacket
 ---@field protocol_version integer
+---@field world_id WorldId
 ---@field sequence SequenceId
 ---@field tick Tick
 ---@field orders OrderData[]
@@ -92,6 +94,7 @@
 
 ---@class JsonlStorage
 ---@field sequence SequenceId
+---@field world_id WorldId|nil
 
 ---@class PersistentStorage
 ---@field active_deliveries ActiveDeliveries
