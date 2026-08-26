@@ -8,10 +8,10 @@
   "required": [
     "protocol_version",
     "world_id",
-    "sequence",
+    "sequence_number",
     "tick",
-    "orders",
-    "actions",
+    "active_orders",
+    "order_events",
     "trains",
     "stations"
   ],
@@ -26,29 +26,38 @@
       "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
       "description": "Persistent UUID v4 identifying the Factorio world."
     },
-    "sequence": {
+    "sequence_number": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 1,
+      "description": "Monotonically increasing packet sequence number within the world."
     },
     "tick": {
       "type": "integer",
       "minimum": 0
     },
-    "orders": {
+    "active_orders": {
       "type": "array",
       "items": { "$ref": "order.schema.json" }
     },
-    "actions": {
+    "order_events": {
       "type": "array",
-      "items": { "$ref": "action.schema.json" }
+      "items": { "$ref": "order-event.schema.json" }
     },
     "trains": {
-      "type": "array",
-      "items": { "$ref": "train-data.schema.json" }
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "train-data.schema.json" }
+      },
+      "additionalProperties": false,
+      "description": "Train data indexed by train ID."
     },
     "stations": {
-      "type": "array",
-      "items": { "$ref": "station-data.schema.json" }
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "station-data.schema.json" }
+      },
+      "additionalProperties": false,
+      "description": "Station data indexed by station ID."
     }
   }
 }

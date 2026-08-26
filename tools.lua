@@ -332,13 +332,15 @@ function tools.get_station_data(station_id)
     return data
 end
 
+---@param event_id EventId
 ---@param order_id OrderId
 ---@param action ActionName
 ---@param from_id StationId|nil
 ---@param to_id StationId|nil
----@return ActionData
-function tools.get_action_data(order_id, action, from_id, to_id)
+---@return OrderEventData
+function tools.get_order_event_data(event_id, order_id, action, from_id, to_id)
     return {
+        id = event_id,
         order_id = order_id,
         action = action,
         from_id = from_id,

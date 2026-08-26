@@ -9,18 +9,18 @@ end
 
 ---@param order OrderData
 ---@return nil
-local function buffer_order(order)
+local function buffer_active_order(order)
     ensure_storage()
 
-    table.insert(storage.send_buffer.orders, order)
+    table.insert(storage.send_buffer.active_orders, order)
 end
 
----@param action ActionData
+---@param event OrderEventData
 ---@return nil
-local function buffer_action(action)
+local function buffer_order_event(event)
     ensure_storage()
 
-    table.insert(storage.send_buffer.actions, action)
+    table.insert(storage.send_buffer.order_events, event)
 end
 
 ---@param train_data TrainData|nil
@@ -51,8 +51,8 @@ end
 local function clear_send_buffer()
     ensure_storage()
 
-    storage.send_buffer.orders = {}
-    storage.send_buffer.actions = {}
+    storage.send_buffer.active_orders = {}
+    storage.send_buffer.order_events = {}
     storage.send_buffer.trains = {}
     storage.send_buffer.stations = {}
 end
@@ -63,26 +63,26 @@ local function collect_send_data()
 
     local data = {
         tick = game.tick,
-        orders = {},
-        actions = {},
+        active_orders = {},
+        order_events = {},
         trains = {},
         stations = {}
     }
 
-    for _, order in ipairs(storage.send_buffer.orders) do
-        table.insert(data.orders, order)
+    for _, order in ipairs(storage.send_buffer.active_orders) do
+        table.insert(data.active_orders, order)
     end
 
-    for _, action in ipairs(storage.send_buffer.actions) do
-        table.insert(data.actions, action)
+    for _, event in ipairs(storage.send_buffer.order_events) do
+        table.insert(data.order_events, event)
     end
 
-    for _, train_data in pairs(storage.send_buffer.trains) do
-        table.insert(data.trains, train_data)
+    for id, train in pairs(storage.send_buffer.trains) do
+        data.trains[id] = train
     end
 
-    for _, station_data in pairs(storage.send_buffer.stations) do
-        table.insert(data.stations, station_data)
+    for id, station in pairs(storage.send_buffer.stations) do
+        data.stations[id] = station
     end
 
     return data
@@ -90,14 +90,14 @@ end
 
 ---@param order OrderData
 ---@return nil
-function buffer.buffer_order(order)
-    buffer_order(order)
+function buffer.buffer_active_order(order)
+    buffer_active_order(order)
 end
 
----@param action ActionData
+---@param event OrderEventData
 ---@return nil
-function buffer.buffer_action(action)
-    buffer_action(action)
+function buffer.buffer_order_event(event)
+    buffer_order_event(event)
 end
 
 ---@param train_data TrainData|nil

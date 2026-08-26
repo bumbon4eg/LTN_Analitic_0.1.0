@@ -1,12 +1,17 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "action.schema.json",
-  "title": "Action",
-  "description": "A recorded action in an LTN order lifecycle.",
+  "$id": "order-event.schema.json",
+  "title": "Order Event",
+  "description": "A recorded event in an LTN order lifecycle.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["order_id", "action", "from_id", "to_id"],
+  "required": ["id", "order_id", "action", "from_id", "to_id"],
   "properties": {
+    "id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Unique event identifier for idempotency."
+    },
     "order_id": { "type": "integer", "minimum": 1 },
     "action": {
       "type": "string",

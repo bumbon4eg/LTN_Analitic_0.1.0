@@ -68,8 +68,8 @@ end
 local function show_send_buffer()
     storage_api.ensure()
 
-    local orders_count = #storage.send_buffer.orders
-    local actions_count = #storage.send_buffer.actions
+    local orders_count = #storage.send_buffer.active_orders
+    local events_count = #storage.send_buffer.order_events
 
     local trains_count = 0
     for _ in pairs(storage.send_buffer.trains) do
@@ -83,8 +83,8 @@ local function show_send_buffer()
 
     game.print(
         "========== SEND BUFFER ==========\n"
-        .. "Orders: " .. tostring(orders_count) .. "\n"
-        .. "Actions: " .. tostring(actions_count) .. "\n"
+        .. "Active Orders: " .. tostring(orders_count) .. "\n"
+        .. "Order Events: " .. tostring(events_count) .. "\n"
         .. "Trains: " .. tostring(trains_count) .. "\n"
         .. "Stations: " .. tostring(stations_count)
     )
@@ -137,7 +137,7 @@ local function show_order(order_id)
 
     -- Ищем сам Order
     for _, order in ipairs(
-        storage.send_buffer.orders
+        storage.send_buffer.active_orders
     ) do
 
         if order.id == order_id then
@@ -147,21 +147,21 @@ local function show_order(order_id)
         end
     end
 
-    -- Ищем Actions этого Order
-    local order_actions = {}
+    -- Ищем Events этого Order
+    local order_events = {}
 
-    for _, action in ipairs(
-        storage.send_buffer.actions
+    for _, event in ipairs(
+        storage.send_buffer.order_events
     ) do
 
-        if action.order_id == order_id then
-            table.insert(order_actions, action)
+        if event.order_id == order_id then
+            table.insert(order_events, event)
         end
     end
 
-    if #order_actions > 0 then
+    if #order_events > 0 then
         found = true
-        game.print("========== ACTIONS ==========\n" .. serpent.block(order_actions))
+        game.print("========== ORDER EVENTS ==========\n" .. serpent.block(order_events))
     end
 
     if not found then

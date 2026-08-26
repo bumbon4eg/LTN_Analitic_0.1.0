@@ -5,15 +5,15 @@
   "description": "Persistent buffer containing data waiting to be sent.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["orders", "actions", "trains", "stations"],
+  "required": ["active_orders", "order_events", "trains", "stations"],
   "properties": {
-    "orders": {
+    "active_orders": {
       "type": "array",
       "items": { "$ref": "order.schema.json" }
     },
-    "actions": {
+    "order_events": {
       "type": "array",
-      "items": { "$ref": "action.schema.json" }
+      "items": { "$ref": "order-event.schema.json" }
     },
     "trains": {
       "type": "object",

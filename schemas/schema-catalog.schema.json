@@ -12,7 +12,7 @@
       "items": {
         "type": "string",
         "enum": [
-          "action.schema.json",
+          "order-event.schema.json",
           "count-data.schema.json",
           "packet.schema.json",
           "order.schema.json",

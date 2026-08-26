@@ -6,6 +6,7 @@
 ---@alias TrainId uint
 ---@alias StationId uint
 ---@alias OrderId uint
+---@alias EventId uint
 ---@alias Tick uint
 ---@alias NetworkId integer
 ---@alias SequenceId uint
@@ -68,7 +69,8 @@
 ---@field train_snapshot TrainData
 ---@field order_content CargoData # Aggregated item/fluid names and amounts.
 
----@class ActionData
+---@class OrderEventData
+---@field id EventId
 ---@field order_id OrderId
 ---@field action ActionName
 ---@field from_id StationId|nil
@@ -83,36 +85,37 @@
 ---@field [TrainId] ActiveDelivery
 
 ---@class SendBuffer
----@field orders OrderData[]
----@field actions ActionData[]
+---@field active_orders OrderData[]
+---@field order_events OrderEventData[]
 ---@field trains table<TrainId, TrainData>
 ---@field stations table<StationId, StationData>
 
 ---@class SendData
 ---@field tick Tick
----@field orders OrderData[]
----@field actions ActionData[]
----@field trains TrainData[]
----@field stations StationData[]
+---@field active_orders OrderData[]
+---@field order_events OrderEventData[]
+---@field trains table<TrainId, TrainData>
+---@field stations table<StationId, StationData>
 
 ---@class JsonlPacket
 ---@field protocol_version integer
 ---@field world_id WorldId
----@field sequence SequenceId
+---@field sequence_number SequenceId
 ---@field tick Tick
----@field orders OrderData[]
----@field actions ActionData[]
----@field trains TrainData[]
----@field stations StationData[]
+---@field active_orders OrderData[]
+---@field order_events OrderEventData[]
+---@field trains table<TrainId, TrainData>
+---@field stations table<StationId, StationData>
 
 ---@class JsonlStorage
----@field sequence SequenceId
+---@field sequence_number SequenceId
 
 ---@class PersistentStorage
 ---@field world_id WorldId
 ---@field active_deliveries ActiveDeliveries
 ---@field send_buffer SendBuffer
 ---@field next_order_id OrderId
+---@field next_event_id EventId
 ---@field jsonl JsonlStorage
 
 ---@class LtnDispatcherUpdatedEvent
@@ -159,8 +162,8 @@
 ---@field register_ltn_events fun()
 
 ---@class BufferModule
----@field buffer_order fun(order: OrderData)
----@field buffer_action fun(action: ActionData)
+---@field buffer_active_order fun(order: OrderData)
+---@field buffer_order_event fun(event: OrderEventData)
 ---@field buffer_train fun(train_data: TrainData|nil)
 ---@field buffer_station fun(station_data: StationData|nil)
 ---@field clear_send_buffer fun()
@@ -194,6 +197,5 @@
 ---@field get_train_data fun(train_id: TrainId): TrainData|nil
 ---@field get_train_cargo fun(train_id: TrainId): CargoData|nil
 ---@field get_station_data fun(station_id: StationId): StationData|nil
----@field get_action_data fun(order_id: OrderId, action: ActionName, from_id: StationId|nil, to_id: StationId|nil): ActionData
+---@field get_order_event_data fun(event_id: EventId, order_id: OrderId, action: ActionName, from_id: StationId|nil, to_id: StationId|nil): OrderEventData
 ---@field get_order_data fun(order_id: OrderId, world_id: WorldId, creation_time: Tick, network_id: NetworkId, train_snapshot: TrainData, order_content: CargoData): OrderData
-

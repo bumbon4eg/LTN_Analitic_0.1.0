@@ -15,7 +15,7 @@ local function ensure_storage()
     storage_api.ensure()
 
     storage.jsonl = storage.jsonl or {
-        sequence = 0
+        sequence_number = 0
     }
 end
 
@@ -23,9 +23,9 @@ end
 local function get_next_sequence()
     ensure_storage()
 
-    storage.jsonl.sequence = storage.jsonl.sequence + 1
+    storage.jsonl.sequence_number = storage.jsonl.sequence_number + 1
 
-    return storage.jsonl.sequence
+    return storage.jsonl.sequence_number
 end
 
 ---@return WorldId
@@ -44,10 +44,10 @@ function jsonl.build_packet()
     local packet = {
         protocol_version = PROTOCOL_VERSION,
         world_id = get_world_id(),
-        sequence = get_next_sequence(),
+        sequence_number = get_next_sequence(),
         tick = data.tick,
-        orders = data.orders,
-        actions = data.actions,
+        active_orders = data.active_orders,
+        order_events = data.order_events,
         trains = data.trains,
         stations = data.stations
     }

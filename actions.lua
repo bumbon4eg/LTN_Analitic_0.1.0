@@ -94,13 +94,14 @@ end
 ---@param order_id OrderId
 ---@param action_name ActionName
 ---@param delivery_data DeliveryData
----@return ActionData|nil
-local function get_action_payload(order_id, action_name, delivery_data)
+---@return OrderEventData|nil
+local function get_event_payload(event_id, order_id, action_name, delivery_data)
     if not delivery_data then
         return nil
     end
 
-    return tools.get_action_data(
+    return tools.get_order_event_data(
+        event_id,
         order_id,
         action_name,
         delivery_data.from_id,
@@ -122,22 +123,29 @@ end
 ---@param action_name ActionName
 ---@param delivery_data DeliveryData
 ---@param log_label string
----@return ActionData|nil
-local function record_action(order_id, action_name, delivery_data, log_label)
-    local action = get_action_payload(
+---@return OrderEventData|nil
+local function record_event(order_id, action_name, delivery_data, log_label)
+    ensure_storage()
+
+    storage.next_event_id = storage.next_event_id or 1
+    local event_id = storage.next_event_id
+    storage.next_event_id = storage.next_event_id + 1
+
+    local event = get_event_payload(
+        event_id,
         order_id,
         action_name,
         delivery_data
     )
 
-    if not action then
+    if not event then
         return nil
     end
 
-    log_payload(log_label, action)
-    buffer.buffer_action(action)
+    log_payload(log_label, event)
+    buffer.buffer_order_event(event)
 
-    return action
+    return event
 end
 
 -- Обработка событий
@@ -153,11 +161,11 @@ local function on_delivery_completed(event)
         return
     end
 
-    record_action(
+    record_event(
         active.order_id,
         ACTION.COMPLETE,
         active.delivery,
-        "COMPLETE ACTION"
+        "COMPLETE EVENT"
     )
 
     remove_active_delivery(train_id)
@@ -231,12 +239,12 @@ local function on_delivery_created(train_id, delivery_data)
     -- BUFFER
     -- ========================================
 
-    buffer.buffer_order(order)
-    record_action(
+    buffer.buffer_active_order(order)
+    record_event(
         order_id,
         ACTION.CREATE,
         delivery_data,
-        "CREATE ACTION"
+        "CREATE EVENT"
     )
     buffer.buffer_train(train_data)
     buffer.buffer_station(from_station)
@@ -272,11 +280,11 @@ local function on_delivery_pickup_complete(event)
         return
     end
 
-    record_action(
+    record_event(
         active.order_id,
         ACTION.ACCEPT,
         active.delivery,
-        "ACCEPT ACTION"
+        "ACCEPT EVENT"
     )
 
     set_active_state(train_id, DELIVERY_STATE.ACCEPTED)
@@ -297,11 +305,11 @@ local function on_delivery_failed(event)
         return
     end
 
-    record_action(
+    record_event(
         active.order_id,
         ACTION.FAILED,
         active.delivery,
-        "ERROR ACTION"
+        "ERROR EVENT"
     )
 
     remove_active_delivery(train_id)
@@ -324,11 +332,11 @@ local function on_delivery_reassigned(event)
         return
     end
 
-    record_action(
+    record_event(
         old_active.order_id,
         ACTION.REASSIGNED,
         old_active.delivery,
-        "REASSIGNED ACTION"
+        "REASSIGNED EVENT"
     )
     buffer.buffer_train(tools.get_train_data(new_train_id))
 

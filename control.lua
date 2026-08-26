@@ -9,21 +9,29 @@ local debug_api = require("debug")
 ---@type JsonlModule
 local jsonl = require("jsonl")
 
+
+-- ========================================
+-- SCRIPT EVENTS            
+-- ========================================
+
 ---@return nil
 script.on_init(function()
-    storage_api.ensure_world_id()
+    storage_api.ensure()
     actions.register_ltn_events()
     jsonl.register()
 end)
 
 ---@return nil
 script.on_configuration_changed(function()
+    storage_api.ensure()
     actions.register_ltn_events()
     jsonl.register()
 end)
 
 ---@return nil
 script.on_load(function()
+    -- В on_load нельзя вызывать storage_api.ensure() (генерация UUID запрещена).
+    -- Только регистрация обработчиков событий и таймеров.
     actions.register_ltn_events()
     jsonl.register()
 end)
@@ -111,7 +119,7 @@ commands.add_command(
 
 commands.add_command(
     "ltn_debug_order",
-    "Show Order and its Actions",
+    "Show Order and its Events",
     ---@param command table
     ---@return nil
     function(command)

@@ -5,24 +5,30 @@
   "description": "Snapshot returned by buffer.collect_send_data().",
   "type": "object",
   "additionalProperties": false,
-  "required": ["tick", "orders", "actions", "trains", "stations"],
+  "required": ["tick", "active_orders", "order_events", "trains", "stations"],
   "properties": {
     "tick": { "type": "integer", "minimum": 0 },
-    "orders": {
+    "active_orders": {
       "type": "array",
       "items": { "$ref": "order.schema.json" }
     },
-    "actions": {
+    "order_events": {
       "type": "array",
-      "items": { "$ref": "action.schema.json" }
+      "items": { "$ref": "order-event.schema.json" }
     },
     "trains": {
-      "type": "array",
-      "items": { "$ref": "train-data.schema.json" }
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "train-data.schema.json" }
+      },
+      "additionalProperties": false
     },
     "stations": {
-      "type": "array",
-      "items": { "$ref": "station-data.schema.json" }
+      "type": "object",
+      "patternProperties": {
+        "^[0-9]+$": { "$ref": "station-data.schema.json" }
+      },
+      "additionalProperties": false
     }
   }
 }
