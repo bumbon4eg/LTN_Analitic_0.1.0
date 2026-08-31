@@ -6,9 +6,9 @@ local jsonl = {}
 ---@type string
 local FILE_NAME = "LTN_Analitic/data.jsonl"
 
--- Версия протокола, используемая для сериализации данных.
----@type integer
-local PROTOCOL_VERSION = 1
+-- Версия протокола в формате "major.minor", где major и minor - целые числа.
+---@type string
+local PROTOCOL_VERSION = "1.0"
 
 ---@return nil
 local function ensure_storage()

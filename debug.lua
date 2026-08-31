@@ -135,11 +135,7 @@ local function show_order(order_id)
 
     local found = false
 
-    -- Ищем сам Order
-    for _, order in ipairs(
-        storage.send_buffer.active_orders
-    ) do
-
+    for _, order in ipairs(storage.send_buffer.active_orders) do
         if order.id == order_id then
             found = true
             game.print("========== ORDER ==========\n" .. serpent.block(order))
@@ -147,13 +143,8 @@ local function show_order(order_id)
         end
     end
 
-    -- Ищем Events этого Order
     local order_events = {}
-
-    for _, event in ipairs(
-        storage.send_buffer.order_events
-    ) do
-
+    for _, event in ipairs(storage.send_buffer.order_events) do
         if event.order_id == order_id then
             table.insert(order_events, event)
         end

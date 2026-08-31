@@ -5,11 +5,10 @@
   "description": "Persistent state initialized by storage_api.ensure().",
   "type": "object",
   "additionalProperties": true,
-  "required": ["active_deliveries", "send_buffer", "next_order_id", "next_event_id"],
+  "required": ["active_deliveries", "send_buffer", "next_order_id"],
   "properties": {
     "active_deliveries": { "$ref": "active-deliveries.schema.json" },
     "send_buffer": { "$ref": "send-buffer.schema.json" },
-    "next_order_id": { "type": "integer", "minimum": 1 },
-    "next_event_id": { "type": "integer", "minimum": 1 }
+    "next_order_id": { "type": "integer", "minimum": 1 }
   }
 }

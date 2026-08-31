@@ -1,6 +1,7 @@
 local tools = require("tools")
 local buffer = require("buffer")
 local storage_api = require("storage")
+local uuid = require("UUID_V4")
 
 local LTN_INTERFACE = "logistic-train-network"
 
@@ -94,8 +95,11 @@ end
 ---@param order_id OrderId
 ---@param action_name ActionName
 ---@param delivery_data DeliveryData
+---@param is_empty boolean
+---@param tick Tick
+---@param train_id TrainId
 ---@return OrderEventData|nil
-local function get_event_payload(event_id, order_id, action_name, delivery_data)
+local function get_event_payload(event_id, order_id, action_name, delivery_data, is_empty, tick, train_id)
     if not delivery_data then
         return nil
     end
@@ -105,7 +109,10 @@ local function get_event_payload(event_id, order_id, action_name, delivery_data)
         order_id,
         action_name,
         delivery_data.from_id,
-        delivery_data.to_id
+        delivery_data.to_id,
+        is_empty,
+        tick,
+        train_id
     )
 end
 
@@ -122,20 +129,22 @@ end
 ---@param order_id OrderId
 ---@param action_name ActionName
 ---@param delivery_data DeliveryData
+---@param is_empty boolean
+---@param tick Tick
+---@param train_id TrainId
 ---@param log_label string
 ---@return OrderEventData|nil
-local function record_event(order_id, action_name, delivery_data, log_label)
-    ensure_storage()
-
-    storage.next_event_id = storage.next_event_id or 1
-    local event_id = storage.next_event_id
-    storage.next_event_id = storage.next_event_id + 1
+local function record_event(order_id, action_name, delivery_data, is_empty, tick, train_id, log_label)
+    local event_id = uuid.new()
 
     local event = get_event_payload(
         event_id,
         order_id,
         action_name,
-        delivery_data
+        delivery_data,
+        is_empty,
+        tick,
+        train_id
     )
 
     if not event then
@@ -161,10 +170,15 @@ local function on_delivery_completed(event)
         return
     end
 
+    local cargo = tools.get_train_cargo(train_id)
+    local is_empty = (cargo == nil or #cargo == 0)
     record_event(
         active.order_id,
         ACTION.COMPLETE,
         active.delivery,
+        is_empty,
+        game.tick,
+        train_id,
         "COMPLETE EVENT"
     )
 
@@ -174,17 +188,27 @@ end
 ---@param train_id TrainId
 ---@param delivery_data DeliveryData
 ---@return nil
-local function on_delivery_created(train_id, delivery_data)
+local function on_delivery_created(train_id, delivery_data, requests_by_stop)
 
     if not delivery_data then
         return
     end
 
-    local order_content = tools.get_train_cargo(train_id)
+    -- Текущее содержимое поезда
+    local current_content = tools.get_train_cargo(train_id)
 
-    if not order_content then
+    if not current_content then
         log("Could not get cargo for train: " .. tostring(train_id))
         return
+    end
+
+    -- Запрошенное содержимое (из requests_by_stop)
+    local required = {}
+    if requests_by_stop and delivery_data.to_id then
+        local request_table = requests_by_stop[delivery_data.to_id]
+        if request_table then
+            required = tools.extract_required_from_request(request_table)
+        end
     end
 
     ensure_storage()
@@ -194,7 +218,7 @@ local function on_delivery_created(train_id, delivery_data)
     storage.next_order_id = storage.next_order_id + 1
 
     -- ========================================
-    -- TRAIN
+    -- TRAIN DATA
     -- ========================================
 
     local train_data = tools.get_train_data(train_id)
@@ -205,16 +229,16 @@ local function on_delivery_created(train_id, delivery_data)
     end
 
     -- ========================================
-    -- ORDER
+    -- ORDER DATA
     -- ========================================
 
     local order = tools.get_order_data(
         order_id,
-        storage.world_id,
         delivery_data.started,
         delivery_data.network_id,
-        train_data,
-        order_content
+        train_id,
+        current_content,
+        required
     )
 
     -- ========================================
@@ -240,10 +264,14 @@ local function on_delivery_created(train_id, delivery_data)
     -- ========================================
 
     buffer.buffer_active_order(order)
+    local is_empty = (#current_content == 0)
     record_event(
         order_id,
         ACTION.CREATE,
         delivery_data,
+        is_empty,
+        game.tick,
+        train_id,
         "CREATE EVENT"
     )
     buffer.buffer_train(train_data)
@@ -258,12 +286,13 @@ end
 local function on_dispatcher_updated(event)
     local new_deliveries = event.new_deliveries or {}
     local deliveries = event.deliveries or {}
+    local requests_by_stop = event.requests_by_stop or {}
 
     for _, train_id in ipairs(new_deliveries) do
         local delivery_data = deliveries[train_id]
 
         if delivery_data then
-            on_delivery_created(train_id, delivery_data)
+            on_delivery_created(train_id, delivery_data, requests_by_stop)
         end
     end
 end
@@ -280,10 +309,15 @@ local function on_delivery_pickup_complete(event)
         return
     end
 
+    local cargo = tools.get_train_cargo(train_id)
+    local is_empty = (cargo == nil or #cargo == 0)
     record_event(
         active.order_id,
         ACTION.ACCEPT,
         active.delivery,
+        is_empty,
+        game.tick,
+        train_id,   -- event.train_id
         "ACCEPT EVENT"
     )
 
@@ -305,10 +339,15 @@ local function on_delivery_failed(event)
         return
     end
 
+    local cargo = tools.get_train_cargo(train_id)
+    local is_empty = (cargo == nil or #cargo == 0)
     record_event(
         active.order_id,
         ACTION.FAILED,
         active.delivery,
+        is_empty,
+        game.tick,
+        train_id,
         "ERROR EVENT"
     )
 
@@ -332,10 +371,15 @@ local function on_delivery_reassigned(event)
         return
     end
 
+    local cargo = tools.get_train_cargo(new_train_id)
+    local is_empty = (cargo == nil or #cargo == 0)
     record_event(
         old_active.order_id,
         ACTION.REASSIGNED,
         old_active.delivery,
+        is_empty,
+        game.tick,
+        new_train_id,   -- новый поезд
         "REASSIGNED EVENT"
     )
     buffer.buffer_train(tools.get_train_data(new_train_id))

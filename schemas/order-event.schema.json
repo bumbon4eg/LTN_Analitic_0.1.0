@@ -5,12 +5,12 @@
   "description": "A recorded event in an LTN order lifecycle.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "order_id", "action", "from_id", "to_id"],
+  "required": ["id", "order_id", "action", "from_id", "to_id", "is_empty", "tick", "train_id"],
   "properties": {
     "id": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Unique event identifier for idempotency."
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "Unique UUID v4 for idempotency."
     },
     "order_id": { "type": "integer", "minimum": 1 },
     "action": {
@@ -18,6 +18,20 @@
       "enum": ["create", "accept", "error", "reassigned", "complete"]
     },
     "from_id": { "type": ["integer", "null"] },
-    "to_id": { "type": ["integer", "null"] }
+    "to_id": { "type": ["integer", "null"] },
+    "is_empty": {
+      "type": "boolean",
+      "description": "True if the train is empty at the moment of the event."
+    },
+    "tick": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Game tick when the event occurred."
+    },
+    "train_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Train involved in the event (for 'reassigned' it's the new train)."
+    }
   }
 }

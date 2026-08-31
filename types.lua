@@ -3,10 +3,14 @@
 -- Shared LuaLS annotations for the Factorio 2.0 LTN Analytic mod.
 -- This file contains declarations only and must not be required at runtime.
 
+---@class LuaInventory
+---@class LuaForce
+---@class LuaSurface
+---@class LuaTrain
+
 ---@alias TrainId uint
 ---@alias StationId uint
 ---@alias OrderId uint
----@alias EventId uint
 ---@alias Tick uint
 ---@alias NetworkId integer
 ---@alias SequenceId uint
@@ -59,22 +63,25 @@
 ---@field to_id StationId
 ---@field started Tick
 ---@field network_id NetworkId
----@field [string] any # Additional LTN fields not used by current logic.
+---@field [string] any # Additional LTN fields including requested items/fluids.
 
 ---@class OrderData
 ---@field id OrderId
----@field world_id WorldId
----@field creation_time Tick # QUESTION: Confirm DB-side conversion from Factorio tick to datestamp.
+---@field creation_time Tick
 ---@field network_id NetworkId
----@field train_snapshot TrainData
----@field order_content CargoData # Aggregated item/fluid names and amounts.
+---@field train_id TrainId
+---@field current_content CargoData # Actual cargo the train is carrying.
+---@field required CargoData # What was requested by the delivery.
 
 ---@class OrderEventData
----@field id EventId
+---@field id UUID_V4
 ---@field order_id OrderId
 ---@field action ActionName
 ---@field from_id StationId|nil
 ---@field to_id StationId|nil
+---@field is_empty boolean   # True if the train is empty at the time of the event.
+---@field tick Tick          # Game tick when the event occurred.
+---@field train_id TrainId   # Train involved in the event (for 'reassigned' it's the new train).
 
 ---@class ActiveDelivery
 ---@field delivery DeliveryData
@@ -98,7 +105,7 @@
 ---@field stations table<StationId, StationData>
 
 ---@class JsonlPacket
----@field protocol_version integer
+---@field protocol_version string
 ---@field world_id WorldId
 ---@field sequence_number SequenceId
 ---@field tick Tick
@@ -115,14 +122,14 @@
 ---@field active_deliveries ActiveDeliveries
 ---@field send_buffer SendBuffer
 ---@field next_order_id OrderId
----@field next_event_id EventId
 ---@field jsonl JsonlStorage
 
 ---@class LtnDispatcherUpdatedEvent
 ---@field new_deliveries TrainId[]
 ---@field deliveries table<TrainId, DeliveryData>
 ---@field available_trains table<TrainId, LtnAvailableTrainData>|nil
----@field [string] any # Extra LTN dispatcher fields (ignored).
+---@field requests_by_stop table<StationId, table<string, number>>|nil   -- Запросы станций
+---@field [string] any
 
 ---@class LtnAvailableTrainData
 ---@field capacity number
@@ -197,5 +204,5 @@
 ---@field get_train_data fun(train_id: TrainId): TrainData|nil
 ---@field get_train_cargo fun(train_id: TrainId): CargoData|nil
 ---@field get_station_data fun(station_id: StationId): StationData|nil
----@field get_order_event_data fun(event_id: EventId, order_id: OrderId, action: ActionName, from_id: StationId|nil, to_id: StationId|nil): OrderEventData
----@field get_order_data fun(order_id: OrderId, world_id: WorldId, creation_time: Tick, network_id: NetworkId, train_snapshot: TrainData, order_content: CargoData): OrderData
+---@field get_order_event_data fun(event_id: UUID_V4, order_id: OrderId, action: ActionName, from_id: StationId|nil, to_id: StationId|nil): OrderEventData
+---@field get_order_data fun(order_id: OrderId, creation_time: Tick, network_id: NetworkId, train_id: TrainId, current_content: CargoData, required: CargoData): OrderData

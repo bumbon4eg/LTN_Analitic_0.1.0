@@ -58,7 +58,6 @@ function storage_api.ensure()
     end
 
     storage.next_order_id = storage.next_order_id or 1
-    storage.next_event_id = storage.next_event_id or 1
 
     if not storage.jsonl then
         storage.jsonl = { sequence_number = 0 }

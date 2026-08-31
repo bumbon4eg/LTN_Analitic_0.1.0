@@ -1,5 +1,9 @@
 local tools = {}
 
+-- ========================================
+-- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ АГРЕГАЦИИ
+-- ========================================
+
 ---@param content ContentData
 ---@param content_name string
 ---@param amount number
@@ -40,6 +44,10 @@ local function add_fluid_content(content, fluid_contents)
         end
     end
 end
+
+-- ========================================
+-- ОСНОВНЫЕ ФУНКЦИИ ДЛЯ ПОЛУЧЕНИЯ ДАННЫХ
+-- ========================================
 
 ---@param train_id TrainId
 ---@return TrainData|nil
@@ -168,11 +176,9 @@ function tools.get_train_data(train_id)
 
             if not wagon_summary then
                 wagon_summary = {
-                    type = wagon_type,
                     count = 0,
                     content = {}
                 }
-
                 composition_summary[wagon_type] = wagon_summary
             end
 
@@ -332,38 +338,100 @@ function tools.get_station_data(station_id)
     return data
 end
 
----@param event_id EventId
+-- ========================================
+-- НОВЫЕ ФУНКЦИИ ДЛЯ ЗАКАЗОВ И СОБЫТИЙ
+-- ========================================
+
+---@param delivery_data DeliveryData
+---@return CargoData
+function tools.extract_required(delivery_data)
+    local required_counts = {}
+
+    -- Попытка извлечь запрошенные предметы и жидкости из различных полей LTN
+    -- Проверяем наличие массивов requested_items/requested_fluids (новый LTN)
+    if delivery_data.requested_items then
+        for _, item in ipairs(delivery_data.requested_items) do
+            if type(item) == "table" and item.name and item.amount then
+                add_content(required_counts, item.name, item.amount)
+            end
+        end
+    end
+    if delivery_data.requested_fluids then
+        for _, fluid in ipairs(delivery_data.requested_fluids) do
+            if type(fluid) == "table" and fluid.name and fluid.amount then
+                add_content(required_counts, fluid.name, fluid.amount)
+            end
+        end
+    end
+
+    -- Старые поля (одиночные запросы)
+    if delivery_data.item and delivery_data.amount then
+        add_content(required_counts, delivery_data.item, delivery_data.amount)
+    end
+    if delivery_data.fluid and delivery_data.fluid_amount then
+        add_content(required_counts, delivery_data.fluid, delivery_data.fluid_amount)
+    end
+
+    -- Преобразуем в массив CountData
+    local result = {}
+    for name, count in pairs(required_counts) do
+        table.insert(result, { type = name, count = count })
+    end
+    return result
+end
+
+---@param order_id OrderId
+---@param creation_time Tick
+---@param network_id NetworkId
+---@param train_id TrainId
+---@param current_content CargoData
+---@param required CargoData
+---@return OrderData
+function tools.get_order_data(order_id, creation_time, network_id, train_id, current_content, required)
+    return {
+        id = order_id,
+        creation_time = creation_time,
+        network_id = network_id,
+        train_id = train_id,
+        current_content = current_content,
+        required = required
+    }
+end
+
+---@param event_id UUID_V4
 ---@param order_id OrderId
 ---@param action ActionName
 ---@param from_id StationId|nil
 ---@param to_id StationId|nil
+---@param is_empty boolean
+---@param tick Tick
+---@param train_id TrainId
 ---@return OrderEventData
-function tools.get_order_event_data(event_id, order_id, action, from_id, to_id)
+function tools.get_order_event_data(event_id, order_id, action, from_id, to_id, is_empty, tick, train_id)
     return {
         id = event_id,
         order_id = order_id,
         action = action,
         from_id = from_id,
-        to_id = to_id
+        to_id = to_id,
+        is_empty = is_empty,
+        tick = tick,
+        train_id = train_id
     }
 end
 
----@param order_id OrderId
----@param world_id WorldId
----@param creation_time Tick
----@param network_id NetworkId
----@param train_snapshot TrainData
----@param order_content CargoData
----@return OrderData
-function tools.get_order_data(order_id, world_id, creation_time, network_id, train_snapshot, order_content)
-    return {
-        id = order_id,
-        world_id = world_id,
-        creation_time = creation_time,
-        network_id = network_id,
-        train_snapshot = train_snapshot,
-        order_content = order_content
-    }
+---@param request_table table<string, number>  # Ключи могут содержать префиксы "item," или "fluid,"
+---@return CargoData
+function tools.extract_required_from_request(request_table)
+    local result = {}
+
+    for key, amount in pairs(request_table) do
+        -- Убираем префикс "item," или "fluid," если они есть
+        local name = key:gsub("^item,", ""):gsub("^fluid,", "")
+        table.insert(result, { type = name, count = amount })
+    end
+
+    return result
 end
 
 return tools

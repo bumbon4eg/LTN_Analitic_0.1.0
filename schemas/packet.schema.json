@@ -17,8 +17,8 @@
   ],
   "properties": {
     "protocol_version": {
-      "type": "integer",
-      "const": 1
+      "type": "string",
+      "const": "1.0"
     },
     "world_id": {
       "type": "string",
