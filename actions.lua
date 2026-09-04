@@ -321,6 +321,14 @@ local function on_delivery_pickup_complete(event)
         "ACCEPT EVENT"
     )
 
+    local cargo = tools.get_train_cargo(train_id)
+    if not cargo then
+        log("Could not get cargo for train: " .. tostring(train_id))
+        return
+    end
+
+    buffer.update_active_order_content(active.order_id, cargo)
+    buffer.buffer_train(tools.get_train_data(train_id))
     set_active_state(train_id, DELIVERY_STATE.ACCEPTED)
 end
 

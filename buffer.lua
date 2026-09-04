@@ -15,6 +15,20 @@ local function buffer_active_order(order)
     table.insert(storage.send_buffer.active_orders, order)
 end
 
+---@param order_id OrderId
+---@param current_content CargoData
+---@return nil
+local function update_active_order_content(order_id, current_content)
+    ensure_storage()
+
+    for _, order in ipairs(storage.send_buffer.active_orders) do
+        if order.id == order_id then
+            order.current_content = current_content
+            return
+        end
+    end
+end
+
 ---@param event OrderEventData
 ---@return nil
 local function buffer_order_event(event)
@@ -92,6 +106,13 @@ end
 ---@return nil
 function buffer.buffer_active_order(order)
     buffer_active_order(order)
+end
+
+---@param order_id OrderId
+---@param current_content CargoData
+---@return nil
+function buffer.update_active_order_content(order_id, current_content)
+    update_active_order_content(order_id, current_content)
 end
 
 ---@param event OrderEventData
