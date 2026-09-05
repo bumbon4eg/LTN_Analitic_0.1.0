@@ -1,0 +1,3 @@
+asyncpg
+SQLAlchemy
+pydantic

@@ -50,6 +50,12 @@ class OrderModel(Base):
         comment="LTN network ID, where was create order"
     )
 
+    current_cargo: Mapped[list[dict] | list] = mapped_column(
+            JSON,
+            nullable=True,
+            comment="Current cargo content, updated on order event"
+        )
+    
     requested_cargo: Mapped[list[dict]] = mapped_column(
         JSON,
         nullable=False,

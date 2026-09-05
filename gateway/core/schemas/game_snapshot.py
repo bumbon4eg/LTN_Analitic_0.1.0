@@ -42,7 +42,7 @@ class GameSnapshotSchema(BaseModel):
         description="Order events"
     )
 
-    trains: dict[str, TrainSchema] = Field(
+    trains: dict[int, TrainSchema] = Field(
         ...,
         description="Train data sequece",
         examples=[
@@ -69,7 +69,7 @@ class GameSnapshotSchema(BaseModel):
         ]
     )
 
-    stations: dict[str, StationSchema] = Field(
+    stations: dict[int, StationSchema] = Field(
         ...,
         description="Station data sequece"
     )

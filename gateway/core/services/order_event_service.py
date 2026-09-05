@@ -16,39 +16,33 @@ class OrderEventService(BaseService):
         self,
         db_client: DBClient,
         order_event_repository: OrderEventRepository,
-        order_repository: OrderRepository,
+        order_service
     ) -> None:
         super().__init__(db_client)
         self._order_event_repository = order_event_repository
-        self._order_repository = order_repository
+        self._order_service = order_service
 
-    async def add_order_events_with_orders(
-        self,
-        orders: list[OrderModel],
-        events: list[OrderEventModel],
-        session: AsyncSession | None = None,
-    ) -> None:
-        async with self._get_session(session) as current_session:
-            if orders:
-                await self._order_repository.add(
-                    orders,
-                    session=current_session,
+    async def add_order_events(
+            self,
+            events: list[OrderEventModel],
+            session: AsyncSession | None = None,
+        ) -> None:
+            if not events:
+                return
+
+            async with self._get_session(session) as current_session:
+                target_ids = {event.order_id for event in events}
+
+                existing_ids = await self._order_service.filter_existing_order_ids(
+                    order_ids=target_ids, 
+                    session=current_session
                 )
 
-            incoming_order_ids = list({event.order_id for event in events})
+                valid_events = [e for e in events if e.order_id in existing_ids]
 
-            order_id_map = await self._order_repository.get_order_id_map(
-                order_ids=incoming_order_ids,
-                session=current_session,
-            )
+                if not valid_events:
+                    return
 
-            valid_events = [
-                event
-                for event in events
-                if event.order_id in order_id_map
-            ]
-
-            if valid_events:
                 await self._order_event_repository.add(
                     data=valid_events,
                     session=current_session,

@@ -1,3 +1,4 @@
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -27,17 +28,17 @@ class OrderEventSchema(BaseModel):
         description="Game tick at event started",
     )
 
-    from_station: StationSchema | int = Field(
+    from_station: StationSchema | dict[str, Any] = Field(
         ...,
         description="Departure station",
     )
 
-    to_station: StationSchema | int = Field(
+    to_station: StationSchema | dict[str, Any] = Field(
             ...,
             description="Arrival station",
     )
 
-    train_data: TrainSchema | int = Field(
+    train_data: TrainSchema | dict[str, Any] = Field(
             ...,
             description="Train data at event moment",
     )

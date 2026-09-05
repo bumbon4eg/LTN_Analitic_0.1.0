@@ -38,7 +38,7 @@ class OrderEventModel(Base):
 
     type: Mapped[OrderEventType] = mapped_column(
         Enum(OrderEventType, name="event_type"),
-        default=OrderEventType.CREATE,
+        default=OrderEventType.CREATED,
         nullable=False,
         comment=(
             "Event type. May be "

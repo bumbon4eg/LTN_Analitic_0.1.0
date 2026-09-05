@@ -25,6 +25,11 @@ class OrderSchema(BaseModel):
         description="LTN network id",
     )
 
+    current_cargo: list[dict] | list = Field(
+        ...,
+        description="Train current cargo",
+    )
+
     requested_cargo: list[dict] = Field(
         ...,
         description="LTN requested cargo",

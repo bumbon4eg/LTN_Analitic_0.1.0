@@ -2,8 +2,8 @@ from enum import Enum
 
 
 class OrderEventType(Enum):
-    CREATE = "create"
-    ACCEPT = "accept"
+    CREATED = "created"
+    LOADED = "loaded"
     ERROR = "error"
     REASSIGNED = "reassigned"
-    COMPLETE = "complete"
+    COMPLETED = "completed"

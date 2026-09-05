@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+.env
+env/
+venv/
+
+
+
+.idea/
+
+core/configs/config.json
+
+# Игнор временных и кэш файлов
+.dev/
