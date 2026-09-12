@@ -1,7 +1,7 @@
-from core.db.models.order import OrderModel
-from core.db.models.order_event import OrderEventModel
+from core.db.models.order import OrderORM
+from core.db.models.order_event import OrderEventORM
 
 __all__ = [
-    "OrderModel",
-    "OrderEventModel",
+    "OrderORM",
+    "OrderEventORM",
 ]

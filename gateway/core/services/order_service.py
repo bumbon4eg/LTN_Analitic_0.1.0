@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db.client import DBClient
 from core.services.base import BaseService
-from core.db.models.order import OrderModel
+from core.db.models.order import OrderORM
 
 from core.db.repositories.order import OrderRepository
 
@@ -21,7 +21,7 @@ class OrderService(BaseService):
 
     async def add_order(
             self,
-            raw_data: list[OrderModel],
+            raw_data: list[OrderORM],
             session: AsyncSession | None = None
     ):
         async with self._get_session(session) as current_session:

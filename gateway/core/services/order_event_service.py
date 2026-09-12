@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.db.client import DBClient
-from core.db.models.order import OrderModel
-from core.db.models.order_event import OrderEventModel
+from core.db.models.order import OrderORM
+from core.db.models.order_event import OrderEventORM
 from core.db.repositories.order_event import OrderEventRepository
 from core.db.repositories.order import OrderRepository
 
@@ -24,7 +24,7 @@ class OrderEventService(BaseService):
 
     async def add_order_events(
             self,
-            events: list[OrderEventModel],
+            events: list[OrderEventORM],
             session: AsyncSession | None = None,
         ) -> None:
             if not events:

@@ -4,14 +4,14 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from core.db.models import OrderEventModel
+from core.db.models import OrderEventORM
 from shared.logging.logger import logger
 
 
 class OrderEventRepository:
     async def add(
         self,
-        data: Sequence[OrderEventModel],
+        data: Sequence[OrderEventORM],
         session: AsyncSession,
     ) -> None:
         if not data:
@@ -32,7 +32,7 @@ class OrderEventRepository:
         ]
 
         stmt = (
-            insert(OrderEventModel)
+            insert(OrderEventORM)
             .values(values)
             .on_conflict_do_nothing()
         )

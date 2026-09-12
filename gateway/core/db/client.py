@@ -7,10 +7,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession, AsyncEngine
 
 from core.db.models.base import Base
-from shared.configs.provider import ConfigProvider
+from shared.configuration.provider import ConfigProvider
 from shared import logger
 from core.db.models.base import Base
-from core.db.models import OrderModel, OrderEventModel
+from core.db.models import OrderORM, OrderEventORM
 
 
 
@@ -51,11 +51,11 @@ class DBClient:
 
             new_url = URL.create(
                 drivername="postgresql+asyncpg",
-                username=self.cfg.db_config.db_user,
-                password=self.cfg.db_config.db_password,
-                host=self.cfg.db_config.db_host,
-                port=self.cfg.db_config.db_port,
-                database=self.cfg.db_config.db_name
+                username=self.cfg.db_settings.db_user,
+                password=self.cfg.db_settings.db_password,
+                host=self.cfg.db_settings.db_host,
+                port=self.cfg.db_settings.db_port,
+                database=self.cfg.db_settings.db_name
             )
 
             # Версия для pooler

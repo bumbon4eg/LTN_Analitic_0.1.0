@@ -9,7 +9,7 @@ from core.schemas import (
         StationSchema,
         GameSnapshotSchema
     )
-from shared.configs.provider import ConfigProvider
+from shared.configuration.provider import ConfigProvider
 from shared import logger
 
 # def to_snapshot_obj(raw_snapshot: dict) -> GameSnapshotSchema:

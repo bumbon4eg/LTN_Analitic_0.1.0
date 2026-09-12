@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 from core.db.client import DBClient
-from core.db.models.order import OrderModel
-from core.db.models.order_event import OrderEventModel
+from core.db.models.order import OrderORM
+from core.db.models.order_event import OrderEventORM
 from core.schemas.game_snapshot import GameSnapshotSchema
 from core.schemas.station import StationSchema
 from core.schemas.train import TrainSchema
@@ -34,14 +34,14 @@ async def main():
         logger.info("[MAIN] - Starting data processing...")
         logger.info(f"[MAIN] - Found {len(raw_data_list)} snapshots to process.")
 
-        all_orders: list[OrderModel] = []
-        all_events: list[OrderEventModel] = []
+        all_orders: list[OrderORM] = []
+        all_events: list[OrderEventORM] = []
 
         for raw_data in raw_data_list:
             snapshot: GameSnapshotSchema = to_snapshot_obj(raw_data)
 
             all_orders.extend([
-                OrderModel(
+                OrderORM(
                     order_id=f"{snapshot.world_id}:{order.id}",
                     train_data=order.train_data.model_dump(),
                     created_tick=order.created_tick,
@@ -53,7 +53,7 @@ async def main():
             ])
 
             all_events.extend([
-                OrderEventModel(
+                OrderEventORM(
                     event_id=event.id,
                     order_id=f"{snapshot.world_id}:{event.order_id}",
                     type=event.type,

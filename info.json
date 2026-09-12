@@ -1,10 +1,10 @@
 {
   "name": "LTN_Analitic",
   "title": "LTN Analitic",
-  "description": "Analitic tool for LTN",
-  "author": "Factorio community",
-  "homepage": "https://github.com/Astorin/LTN-Analitic",
-  "version": "0.1.0",
+  "description": "Advanced-user analytics tool for studying Logistic Train Network gameplay. Collects delivery, order, train, station, and event data, then exports versioned JSONL packets for external analysis. Read README.md(or click on the link in homepage) and docs/architecture.md included with the project for installation and usage. Full functionality requires a user-provided database and the separate gateway application.",
+  "author": "ZorngeistQual|bombo4len",
+  "homepage": "https://github.com/bumbon4eg/LTN_Analitic_0.1.0/blob/main/README.md",
+  "version": "0.1.1",
   "factorio_version": "2.0",
   "dependencies": [
     "LogisticTrainNetwork >= 2.0.0",

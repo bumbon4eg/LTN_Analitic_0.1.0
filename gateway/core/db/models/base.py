@@ -20,7 +20,7 @@ class Base(DeclarativeBase):
     def is_editable(cls, field: Any) -> bool:
         editable = getattr(cls, "__editable__", None)
         if editable is None:
-            raise AttributeError(f"[SCHEMA] - {cls.__name__} does not define __editable__")
+            raise AttributeError(f"[ORM] - {cls.__name__} does not define __editable__")
 
         field_name = getattr(field, "value", field)
 

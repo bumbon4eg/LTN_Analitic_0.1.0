@@ -3,14 +3,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.dialects.postgresql import insert
 
-from core.db.models import OrderModel
+from core.db.models import OrderORM
 from shared.logging.logger import logger
 
 
 class OrderRepository:
     async def add(
         self,
-        data: Sequence[OrderModel],
+        data: Sequence[OrderORM],
         session: AsyncSession,
     ) -> None:
         if not data:
@@ -30,7 +30,7 @@ class OrderRepository:
         ]
 
         stmt = (
-            insert(OrderModel)
+            insert(OrderORM)
             .values(values)
             .on_conflict_do_nothing()
         )
@@ -46,6 +46,6 @@ class OrderRepository:
         if not order_ids:
             return set()
 
-        stmt = select(OrderModel.order_id).where(OrderModel.order_id.in_(order_ids))
+        stmt = select(OrderORM.order_id).where(OrderORM.order_id.in_(order_ids))
         result = await session.execute(stmt)
         return set(result.scalars().all())

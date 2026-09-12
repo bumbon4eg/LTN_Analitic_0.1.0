@@ -9,7 +9,7 @@ from core.db.models.base import Base
 
 
 
-class OrderEventModel(Base):
+class OrderEventORM(Base):
     __tablename__ = "order_events"
     __editable__ = {}
 

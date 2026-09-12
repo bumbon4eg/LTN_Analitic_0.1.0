@@ -7,7 +7,8 @@ from core.db.models.base import Base
 from core.schemas.train import TrainSchema
 
 
-class OrderModel(Base):
+class OrderORM(Base):
+    #TODO: Rename to OrderORM
     __tablename__ = "orders"
     __editable__ = {}
 
