@@ -13,9 +13,9 @@ class OrderEventRepository:
         self,
         data: Sequence[OrderEventORM],
         session: AsyncSession,
-    ) -> None:
+    ) -> int:
         if not data:
-            return
+            return 0
 
         values = [
             {
@@ -37,6 +37,7 @@ class OrderEventRepository:
             .on_conflict_do_nothing()
         )
 
-        await session.execute(stmt)
+        result = await session.execute(stmt)
+        return max(result.rowcount or 0, 0)
 
     

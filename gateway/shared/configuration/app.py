@@ -14,6 +14,7 @@ class AppConfiguration(BaseModel):
     )
 
     db_settings: DBSettings
+    source_jsonl_path: Path
 
 
 

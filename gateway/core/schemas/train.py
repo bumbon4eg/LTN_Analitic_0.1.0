@@ -1,14 +1,3 @@
-from datetime import datetime
-
-from pydantic import BaseModel, Field, computed_field
-
-from typing import TYPE_CHECKING
-
-
-
-from core.db.models.base import Base
-
-
 from pydantic import BaseModel, Field, computed_field
 
 

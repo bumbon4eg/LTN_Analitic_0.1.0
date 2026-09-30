@@ -1,6 +1,3 @@
-import ssl
-import sys
-
 from sqlalchemy import text
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
@@ -8,6 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 
 from core.db.models.base import Base
 from shared.configuration.provider import ConfigProvider
+from shared.configuration.ssl_settings import get_database_ssl_option
 from shared import logger
 from core.db.models.base import Base
 from core.db.models import OrderORM, OrderEventORM
@@ -40,14 +38,11 @@ class DBClient:
         en: Init engine & sessionmaker
         ru: Инициализация engine и sessionmaker
         """
+        self.cfg = ConfigProvider.get()
         if self.engine is not None:
             return
         try:
             logger.info("[DB] - 🔁 Try create engine & connecting to db...")
-
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
 
             new_url = URL.create(
                 drivername="postgresql+asyncpg",
@@ -83,6 +78,7 @@ class DBClient:
                 max_overflow=10,
                 connect_args={
                     "command_timeout": 10,
+                    "ssl": get_database_ssl_option(self.cfg.db_settings.db_ssl),
                     "server_settings": {
                         "jit": "off",
                     },
@@ -117,11 +113,19 @@ class DBClient:
 
         except SQLAlchemyError as err:
             logger.critical(f"[DB] - ❌ Error connecting to db: {err}")
-            sys.exit(0)
+            if self.engine is not None:
+                await self.engine.dispose()
+            self.engine = None
+            self._session_factory = None
+            raise ConnectionError(f"Could not connect to the database: {err}") from err
 
         except Exception as err:
             logger.critical(f"[DB] - ❌ Undefined error: {err}")
-            sys.exit(0)
+            if self.engine is not None:
+                await self.engine.dispose()
+            self.engine = None
+            self._session_factory = None
+            raise
 
     def get_session_factory(self) -> async_sessionmaker:
         if self._session_factory is None:

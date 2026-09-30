@@ -23,9 +23,9 @@ class OrderService(BaseService):
             self,
             raw_data: list[OrderORM],
             session: AsyncSession | None = None
-    ):
+    ) -> int:
         async with self._get_session(session) as current_session:
-            await self._order_repository.add(
+            return await self._order_repository.add(
                 data=raw_data,
                 session=current_session,
             )

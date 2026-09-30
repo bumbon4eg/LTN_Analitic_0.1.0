@@ -26,9 +26,9 @@ class OrderEventService(BaseService):
             self,
             events: list[OrderEventORM],
             session: AsyncSession | None = None,
-        ) -> None:
+        ) -> int:
             if not events:
-                return
+                return 0
 
             async with self._get_session(session) as current_session:
                 target_ids = {event.order_id for event in events}
@@ -41,9 +41,9 @@ class OrderEventService(BaseService):
                 valid_events = [e for e in events if e.order_id in existing_ids]
 
                 if not valid_events:
-                    return
+                    return 0
 
-                await self._order_event_repository.add(
+                return await self._order_event_repository.add(
                     data=valid_events,
                     session=current_session,
                 )

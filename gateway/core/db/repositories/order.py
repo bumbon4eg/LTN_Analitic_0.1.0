@@ -12,9 +12,9 @@ class OrderRepository:
         self,
         data: Sequence[OrderORM],
         session: AsyncSession,
-    ) -> None:
+    ) -> int:
         if not data:
-            return
+            return 0
 
         values = [
             {
@@ -35,7 +35,8 @@ class OrderRepository:
             .on_conflict_do_nothing()
         )
 
-        await session.execute(stmt)
+        result = await session.execute(stmt)
+        return max(result.rowcount or 0, 0)
 
     async def get_existing_ids(
         self, 

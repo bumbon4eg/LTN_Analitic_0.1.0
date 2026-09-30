@@ -10,3 +10,4 @@ class DBSettings(CommonSettings):
     db_host: str = Field(..., alias="DB_HOST")
     db_port: int = Field(..., alias="DB_PORT")
     db_name: str = Field(..., alias="DB_NAME")
+    db_ssl: bool = Field(default=False, alias="DB_SSL")
