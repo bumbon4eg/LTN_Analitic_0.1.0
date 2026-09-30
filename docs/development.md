@@ -1,64 +1,154 @@
-# Разработка и установка
+# Разработка
 
-## Требования
+Этот документ предназначен для разработчиков проекта. Пользовательскую установку см. в [installation.md](installation.md).
 
-- Factorio 2.0.
-- Logistic Train Network 2.0.0 или новее; дополнительные совместимые моды перечислены в `info.json`.
-- Gateway: Python 3.10+ и PostgreSQL. Пакеты Python указаны в `gateway/requirements.txt`.
+---
 
-Используй Factorio 2.0 API и проверяй LTN remote API перед добавлением вызовов. Factorio runtime — модифицированный Lua 5.2.
+## Рабочее окружение
 
-## Установка мода
+Рекомендуемый стек:
 
-В репозитории Lua-исходники расположены в `code/`, но Factorio ожидает `info.json` и файлы мода в корне каталога мода. В текущем репозитории нет `build.ps1` и другого автоматического сборщика.
+- VS Code;
+- Lua Language Server / EmmyLua;
+- Factorio Modding Tool Kit;
+- Factorio 2.0;
+- Logistic Train Network;
+- Python 3.12 для Gateway;
+- PostgreSQL.
 
-Для локальной упаковки в PowerShell из корня репозитория:
+Для AI-помощника в репозитории предусмотрены:
 
-```powershell
-$stage = Join-Path $env:TEMP ("LTN_Analitic_" + [guid]::NewGuid().ToString())
-$dist = Join-Path $PWD "dist"
-New-Item -ItemType Directory -Path $stage | Out-Null
-New-Item -ItemType Directory -Path $dist -Force | Out-Null
-Copy-Item .\info.json $stage
-Copy-Item .\code\*.lua $stage
-Compress-Archive -Path (Join-Path $stage "*") -DestinationPath (Join-Path $dist "LTN_Analitic_0.1.1.zip") -Force
-Remove-Item $stage -Recurse -Force
+```text
+.github/copilot-instructions.md
+.github/agents/factorio-mod-developer.agent.md
 ```
 
-ZIP содержит `info.json` и Lua-файлы прямо в корне архива. Установи ZIP в каталог `mods` Factorio. Не добавляй в архив `gateway/`, `schemas/` или `docs/`.
+Инструкции должны быть в Git, а не в пользовательском `.gitignore`, если они предназначены для всей команды.
 
-После загрузки мира JSONL создаётся в `script-output/LTN_Analitic/data.jsonl`.
+---
 
-## Запуск gateway для разработки
+## Проверка Factorio-мода
+
+Lua runtime Factorio основан на модифицированном Lua 5.2. Не следует предполагать наличие произвольных библиотек стандартного Lua.
+
+Проверяйте:
+
+- `control.lua` и регистрацию lifecycle callbacks;
+- LTN remote events;
+- изменения persistent state в `storage`;
+- JSONL serialization;
+- миграцию старых полей storage;
+- соответствие `schemas/*.schema.json` фактическому JSON.
+
+Официальный источник API:
+
+[Factorio Lua API](https://lua-api.factorio.com/)
+
+---
+
+## Проверка Gateway
 
 ```powershell
 Set-Location .\gateway
-python -m venv .venv
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 python main.py
 ```
 
-На первом запуске настрой источник и PostgreSQL через GUI. Конфигурация расположена в `%APPDATA%\LTN_Analitics_gateway\config.conf`. Подробности приведены в [gateway.md](gateway.md).
+Перед commit рекомендуется как минимум импортировать проект в IDE и убедиться, что отсутствуют очевидные import/type errors.
+
+---
 
 ## Изменение JSONL-контракта
 
-`schemas/` — контракт между Factorio-модом и gateway. При изменении пакета:
+Изменение формата требует согласованной работы сразу в нескольких местах:
 
-1. обнови DTO и сериализацию в `code/`;
-2. обнови соответствующие JSON Schema;
-3. обнови преобразование и Pydantic-модели gateway;
-4. проверь обратную совместимость и версионирование;
-5. обнови [описание контракта](data-contract.md).
+```text
+Factorio Lua
+    ↕
+JSON Schema
+    ↕
+Gateway parser / Pydantic
+    ↕
+Database models
+    ↕
+Documentation
+```
 
-`protocol_version` относится к JSONL, а не к версии мода в `info.json`. Изменение имён/типов/семантики полей требует новой major-версии.
+Порядок работы:
 
-## Проверки
+1. изменить producer в `code/`;
+2. обновить нужные схемы в `schemas/`;
+3. обновить Gateway-схемы/formatter;
+4. проверить обратную совместимость;
+5. обновить `docs/data-contract.md`;
+6. проверить существующие JSONL-файлы;
+7. только после этого менять `protocol_version`, если это действительно требуется.
 
-- Проверь Lua-синтаксис и вручную протестируй callbacks в Factorio с LTN.
-- Проверяй JSONL-пакеты по схемам из `schemas/`.
-- Для gateway запускай проверки из каталога `gateway/` с активным `.venv`.
-- Проверь повторный импорт одного файла: дублирующие orders/events должны пропускаться.
-- Проверяй подключение к PostgreSQL отдельно с SSL выключенным и включённым, если целевой сервер поддерживает оба режима.
+---
 
-См. [обзор архитектуры](architecture.md) и [архитектуру Lua-мода](factorio-mod.md).
+## Правила для изменений
+
+- не выдумывать Factorio API;
+- не выдумывать LTN remote API;
+- сохранять разделение runtime-мода и Gateway;
+- использовать `storage` для persistent state Factorio;
+- не менять несвязанный код без необходимости;
+- сохранять существующие имена и публичные контракты;
+- при изменении JSON сначала смотреть на схему и потребителей.
+
+---
+
+## Локальная установка мода без ZIP-сборщика
+
+Для быстрой разработки удобно поддерживать отдельную runtime-папку:
+
+```text
+%APPDATA%\Factorio\mods\LTN_Analitic_0.1.1\
+```
+
+В неё синхронизируются:
+
+```text
+info.json
+thumbnail.png
+code\*.lua
+```
+
+Это именно **runtime-копия мода**, а не build artifact. Репозиторий остаётся в удобной для разработки структуре `code/ + gateway/ + schemas/ + docs/`.
+
+---
+
+## Что не должно попадать в Git
+
+Никогда не публикуйте:
+
+```text
+.env
+config.conf
+.venv/
+__pycache__/
+*.pyc
+runtime logs
+local database dumps
+```
+
+Также не должны попадать в публичную историю реальные пароли, токены и connection strings.
+
+---
+
+## Перед релизом
+
+Проверьте:
+
+- версия в `info.json`;
+- Mod Portal description/homepage;
+- `thumbnail.png`;
+- Factorio 2.0 + LTN;
+- новый мир и существующий save;
+- JSONL output;
+- повторный импорт JSONL;
+- PostgreSQL SSL и non-SSL сценарии, если оба поддерживаются окружением;
+- отсутствие секретов в Git;
+- документацию и installation flow.

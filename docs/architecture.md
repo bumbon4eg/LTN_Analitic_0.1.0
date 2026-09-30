@@ -1,103 +1,182 @@
-# Архитектура LTN Analytic
+# Архитектура проекта
 
-## Назначение
-
-Проект состоит из двух взаимодействующих частей:
-
-1. **Factorio-мод** хранится исходниками в `code/`, собирает данные Logistic
-   Train Network и записывает их в JSON Lines.
-2. **`gateway/`** — отдельное Python-приложение с Tkinter-интерфейсом. Оно
-   читает JSONL, преобразует пакеты и загружает заказы и события в PostgreSQL.
-
-Такое разделение позволяет менять способ хранения данных, не встраивая
-подключение к базе данных в Factorio-мод.
-
-Мод предназначен для продвинутых пользователей, исследующих игру и работу LTN.
-Он не предоставляет полноценный интерфейс аналитики внутри Factorio. Для полной
-работы требуется собственная база данных и отдельный `gateway`, который читает
-JSONL-файл из `script-output/LTN_Analitic/` и загружает данные в БД.
-
-Перед установкой прочитайте [README.md](../README.md), затем выберите нужный
-тематический документ из списка в конце этой страницы. `info.json` содержит
-метаданные и зависимости Factorio-мода.
-
-## Структура репозитория
+LTN Analitic состоит из двух runtime-компонентов и одного общего контракта данных.
 
 ```text
-.
-├── code/                    # Исходный Lua-код Factorio-мода
-│   ├── control.lua          # Точка входа мода
-│   ├── actions.lua          # Обработка событий LTN
-│   ├── buffer.lua           # Накопление данных
-│   ├── jsonl.lua            # Формирование JSONL-пакетов
-│   ├── storage.lua          # Persistent state Factorio
-│   ├── debug.lua            # Команды диагностики
-│   ├── tools.lua            # Чтение данных из Factorio API
-│   ├── types.lua            # LuaLS-аннотации
-│   └── UUID_V4.lua           # UUID игрового мира
-├── info.json                # Метаданные и зависимости Factorio-мода
-├── schemas/                 # JSON Schema внешнего контракта данных
-├── gateway/                 # Отдельный загрузчик JSONL в БД
-├── docs/                    # Документация проекта
-└── .dev/                    # Локальные материалы разработки
+                 ┌─────────────────────┐
+                 │      Factorio       │
+                 │     + LTN Analitic  │
+                 └──────────┬──────────┘
+                            │
+                            │ JSONL
+                            ▼
+                 ┌─────────────────────┐
+                 │      data.jsonl      │
+                 └──────────┬──────────┘
+                            │
+                            │
+                 ┌──────────▼──────────┐
+                 │       Gateway       │
+                 │ read / validate /   │
+                 │ transform / import  │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │     PostgreSQL      │
+                 └─────────────────────┘
 ```
 
-Исходный Lua-код находится в `code/`. Скрипт `build.ps1` удалён; его больше нет
-в репозитории. Для локальной упаковки нужно создать staging-каталог, скопировать
-в него `info.json` и Lua-файлы из `code/` в корень, затем упаковать содержимое в
-ZIP для Factorio.
+## 1. Factorio runtime
 
-## Поток данных
+Исходный Lua-код находится в `code/`.
+
+| Файл | Назначение |
+| --- | --- |
+| `control.lua` | точка входа и регистрация callbacks |
+| `actions.lua` | жизненный цикл LTN deliveries и events |
+| `buffer.lua` | накопление данных перед JSONL-записью |
+| `jsonl.lua` | формирование и запись пакетов |
+| `storage.lua` | persistent state и `world_id` |
+| `tools.lua` | чтение train/station/cargo данных |
+| `debug.lua` | диагностические команды |
+| `types.lua` | аннотации типов для редактора |
+| `UUID_V4.lua` | генерация UUID v4 |
+
+Мод не устанавливает DB connection и не содержит реквизитов внешней БД.
+
+### Lifecycle
+
+- `script.on_init` инициализирует `storage`, LTN callbacks и JSONL timer;
+- `script.on_configuration_changed` поддерживает структуру state после обновления;
+- `script.on_load` повторно регистрирует callbacks, не изменяя persistent state;
+- каждые 360 игровых тиков JSONL-пакет дописывается в `script-output`.
+
+### Persistent state
+
+Ключевые поля:
 
 ```text
-LTN event
-   -> code/actions.lua
-   -> code/buffer.lua
-   -> code/jsonl.lua (каждые 360 тиков)
-    -> script-output/LTN_Analitic/data.jsonl
-    -> gateway
-    -> database
+storage.world_id
+storage.active_deliveries
+storage.send_buffer.active_orders
+storage.send_buffer.order_events
+storage.send_buffer.trains
+storage.send_buffer.stations
+storage.next_order_id
+storage.jsonl.sequence_number
 ```
 
-### Сбор данных
+---
 
-`code/control.lua` связывает Factorio lifecycle, LTN callbacks, диагностику и
-JSONL timer. `code/actions.lua` обрабатывает delivery lifecycle; `code/tools.lua`
-читает train/station snapshots; `code/buffer.lua` накапливает orders, events,
-trains и stations в persistent `storage`. Подробности — в
-[описании Factorio-мода](factorio-mod.md).
+## 2. JSONL contract
 
-### Формат экспорта
+Каждая непустая строка `data.jsonl` — независимый пакет.
 
-Каждая строка `script-output/LTN_Analitic/data.jsonl` — самостоятельный пакет.
-Состав полей, вложенные schemas, правила sequence/world и протокол описаны в
-[контракте данных](data-contract.md).
+```text
+protocol_version
+world_id
+sequence_number
+tick
+active_orders
+order_events
+trains
+stations
+```
 
-## Версионирование протокола
+Каноническая схема:
 
-`protocol_version` описывает JSONL-контракт и не равен версии мода в `info.json`.
-Совместимое необязательное поле обычно не требует смены версии; изменение имени,
-типа, обязательности или смысла поля требует новой major-версии. Подробные правила
-согласованных изменений приведены в [контракте данных](data-contract.md).
+```text
+schemas/packet.schema.json
+```
 
-## Lifecycle
+Версия контракта сейчас `1.0` и независима от версии мода.
 
-Factorio lifecycle и периодическая отправка JSONL описаны на странице
-[Factorio-мода](factorio-mod.md); пакет и event lifecycle — в
-[контракте данных](data-contract.md).
+Подробнее: [data-contract.md](data-contract.md).
 
-## Границы компонентов
+---
 
-- Factorio-мод собирает snapshots и пишет JSONL; он не открывает соединение с БД.
-- Gateway отвечает за GUI, чтение JSONL и импорт; он не запускается в Factorio.
-- `schemas/` описывает общий формат данных и поддерживается вместе с обоими
-   компонентами.
-- Изменения мода и gateway проверяются каждый в собственном runtime.
+## 3. Gateway
 
-## Документация по темам
+Gateway в текущем снимке — Python-приложение с Tkinter GUI.
 
-- [Factorio-мод](factorio-mod.md): модули, lifecycle, storage и диагностика.
-- [Контракт данных](data-contract.md): JSONL-пакет, схемы и версионирование.
-- [Gateway](gateway.md): GUI, конфигурация, PostgreSQL, SSL и импорт.
-- [Разработка и установка](development.md): локальный запуск, упаковка и проверки.
+Слои:
 
+```text
+gateway/ui/
+    Tkinter GUI
+        ↓
+gateway/main.py
+    orchestration
+        ↓
+gateway/tools/
+    data formatting
+        ↓
+gateway/core/schemas/
+    validation
+        ↓
+gateway/core/services/
+    business operations
+        ↓
+gateway/core/db/
+    SQLAlchemy / asyncpg
+        ↓
+PostgreSQL
+```
+
+Gateway текущей версии сохраняет в БД orders и order_events. Train/station snapshots остаются частью JSONL-контракта, но отдельная запись этих snapshots в БД ещё не завершена.
+
+---
+
+## 4. Конфигурация
+
+Factorio-мод не знает о конкретной базе.
+
+Gateway получает свои параметры локально:
+
+```text
+%APPDATA%\LTN_Analitics_gateway\config.conf
+```
+
+Это принципиальная граница безопасности и распределения ответственности.
+
+---
+
+## 5. Повторная обработка
+
+Gateway использует:
+
+```text
+world_id:order_id
+```
+
+для order key и UUID для event identity.
+
+Повторная вставка известных сущностей пропускается на уровне БД.
+
+При этом текущий importer перечитывает весь файл. В standalone-версии целевой механизм — хранить cursor/checkpoint и читать только новые данные.
+
+---
+
+## 6. Standalone target
+
+Целевой пользовательский runtime:
+
+```text
+Factorio
+   ↓
+data.jsonl
+   ↓
+gateway.exe
+   ↓
+PostgreSQL / API
+```
+
+Standalone Gateway должен сохранить GUI первичной настройки и вынести все DB credentials за пределы Factorio-мода.
+
+Дополнительно планируются:
+
+- постоянное отслеживание файла;
+- checkpoint по `world_id + sequence_number`;
+- защищённое хранение секрета Windows;
+- отдельная release-поставка `gateway.exe`.

@@ -1,106 +1,42 @@
-```
-# ==========================================
-# VS Code (Настройки редактора и локальное окружение)
-# ==========================================
+# IDE / local configuration
 .vscode/
 *.code-workspace
-
-# ==========================================
-# Инструкции для ассистентов и генераторов кода
-# ==========================================
-.github/
-
-# ==========================================
-# Временные файлы и артефакты Lua / Busted / LuaRocks
-# ==========================================
-# Локальные зависимости (если используется LuaRocks)
-lua_modules/
-.luarocks/
-
-# Временные файлы компиляции
-*.o
-*.os
-*.so
-*.dylib
-*.dll
-
-# Файлы тестирования и кэша
-.dev/
-.busted
-.luacov
-luacov.stats.out
-luacov.report.out
-.luacheckrc.cache
-
-# ==========================================
-# Специфика Factorio (если разрабатывается мод)
-# ==========================================
-# Сгенерированные архивные сборки мода
-*.zip
-dist/
-
-# Логи и сохранения Factorio (если симлинкали папку)
-factorio-current.log
-factorio-previous.log
-template-log-handle.json
-saves/
-
-# ==========================================
-# Документация проекта
-# ==========================================
-# Документация хранится в репозитории.
-
-# ==========================================
-# Системные файлы ОС
-# ==========================================
-# Windows
-Thumbs.db
-Thumbs.db:encryptable
-ehthumbs.db
-desktop.ini
-$RECYCLE.BIN/
-
-# macOS
-.DS_Store
-.apple_desktop
-.LSOverride
-
-# ==========================================
-# JetBrains IDEs (PyCharm, IntelliJ IDEA, WebStorm и др.)
-# ==========================================
 .idea/
-*.iws
-*.iml
-*.ipr
-out/
-```
 
-# ==========================================
-# Локальные файлы, которые не должны попадать в репозиторий
-# ==========================================
-config.conf
+# GitHub Copilot instructions are project files and should be committed.
 
-
-# ==========================================
-# Для gateway
-# ==========================================
-
-# Byte-compiled / optimized / DLL files
+# Python
+.venv/
+gateway/.venv/
 __pycache__/
 *.py[cod]
-*$py.class
+*.pyo
+*.pyd
 
-# Virtual environment
-.venv/
+# Secrets / local configuration
 .env
-env/
-venv/
+.env.*
+!.env_template
+gateway/.env
+gateway/config.conf
+config.conf
 
+# Build / distribution
+build/
+dist/
+*.exe
+*.zip
 
+# Factorio local data
+factorio-current.log
+factorio-previous.log
+saves/
+script-output/
 
-.idea/
-
-core/configs/config.json
-
-# Игнор временных и кэш файлов
+# Local development material
 .dev/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
