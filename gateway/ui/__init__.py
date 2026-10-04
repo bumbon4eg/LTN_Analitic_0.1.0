@@ -1,1 +1,0 @@
-"""Desktop user interface for the LTN Analytics Gateway."""
