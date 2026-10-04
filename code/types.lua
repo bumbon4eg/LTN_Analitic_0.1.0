@@ -187,11 +187,14 @@
 ---@class JsonlModule
 ---@field write fun(): JsonlWriteResult
 ---@field build_packet fun(): JsonlPacket
+---@field is_enabled fun(): boolean
+---@field on_runtime_mod_setting_changed fun(event: table): nil
 ---@field register fun(): nil
 
 ---@class DebugModule
 ---@field show_world_id fun()
 ---@field regenerate_world_id fun()
+---@field show_jsonl_status fun()
 ---@field show_active_deliveries fun()
 ---@field clear_active_deliveries fun()
 ---@field show_send_buffer fun()

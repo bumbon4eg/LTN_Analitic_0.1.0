@@ -1,332 +1,65 @@
 # LTN Analitic
 
-Инструмент для сбора и передачи аналитических данных из **Factorio 2.0 + Logistic Train Network (LTN)** во внешнюю систему хранения.
-
-Мод работает внутри Factorio и **не подключается к базе данных напрямую**. Он собирает сведения о доставках, заказах, событиях, поездах и станциях, формирует версионированные пакеты **JSON Lines (JSONL)** и сохраняет их в `script-output`.
-
-Отдельный компонент `gateway` читает JSONL, проверяет и преобразует данные и загружает поддерживаемые сущности в PostgreSQL.
-
-> **Важно:** в текущем снимке репозитория `gateway` запускается из Python. Целевой пользовательский вариант проекта — самостоятельный `gateway.exe`, который не требует установки Python и зависимостей. Исполняемый файл в этот исходный снимок ещё не включён.
+Standalone analytics mod for **Factorio 2.0** and Logistic Train Network. It records delivery, order, train, station, and event data as versioned JSONL packets in Factorio's `script-output`. The mod has no database connection and does not require the companion Gateway to run.
 
 ![LTN Analitic](thumbnail.png)
 
----
+## Requirements
 
-## Возможности
+- Factorio 2.0
+- Logistic Train Network 2.0.0 or newer
+- Optional compatibility mods listed in [info.json](info.json)
 
-### Factorio-мод
+## JSONL recording
 
-- сбор событий жизненного цикла LTN-доставок;
-- фиксация заказов и связанных событий;
-- снимки поездов и станций;
-- постоянный `world_id` для идентификации мира;
-- `sequence_number` для упорядочивания JSONL-пакетов;
-- версионируемый JSONL-контракт;
-- JSON Schema для проверки формата данных;
-- диагностические команды Factorio;
-- отсутствие реквизитов БД внутри мода.
+Recording is enabled by default. Change **Settings → Mod settings → LTN Analitic → Write JSONL snapshots to script-output** to pause or resume it. Turning recording off clears the pending buffer; events from the paused period are not exported when recording resumes.
 
-### Gateway
-
-- графический интерфейс на Tkinter;
-- мастер первичной настройки;
-- выбор JSONL-файла;
-- подключение к PostgreSQL;
-- поддержка SSL/TLS с проверкой сертификата;
-- проверка соединения до сохранения настроек;
-- автоматическое создание таблиц моделей при первом успешном подключении;
-- пакетная загрузка данных;
-- защита от повторной вставки уже известных orders/events на уровне уникальных идентификаторов;
-- локальная статистика импорта.
-
----
-
-## Архитектура
-
-Проект разделён на две независимые части:
-
-```text
-┌───────────────────────┐
-│       Factorio        │
-│       LTN Analitic    │
-└───────────┬───────────┘
-            │
-            │ JSONL
-            ▼
-┌───────────────────────┐
-│    script-output/     │
-│ LTN_Analitic/data.jsonl│
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│       Gateway         │
-│  read → validate →    │
-│  transform → import   │
-└───────────┬───────────┘
-            │
-            │ PostgreSQL
-            ▼
-┌───────────────────────┐
-│       Database        │
-│ orders / order_events │
-└───────────────────────┘
-```
-
-Такое разделение намеренное: одинаковый мод для игроков не должен содержать адрес, логин, пароль или другие секреты вашей БД.
-
-Подробнее:
-
-- [Обзор архитектуры](docs/architecture.md)
-- [Установка](docs/installation.md)
-- [Gateway](docs/gateway.md)
-- [База данных](docs/database.md)
-- [Контракт JSONL](docs/data-contract.md)
-- [Архитектура Factorio-мода](docs/factorio-mod.md)
-- [Разработка](docs/development.md)
-- [Устранение проблем](docs/troubleshooting.md)
-
----
-
-## Требования
-
-### Для Factorio-мода
-
-- Factorio **2.0**;
-- Logistic Train Network (`LogisticTrainNetwork >= 2.0.0`);
-- совместимые дополнительные моды подключаются как optional dependencies и перечислены в [`info.json`](info.json).
-
-### Для текущего Gateway
-
-- Windows;
-- Python 3.10+; для разработки проекта рекомендуется Python 3.12;
-- PostgreSQL;
-- доступ к JSONL-файлу, создаваемому модом.
-
-Standalone-версия `gateway.exe` будет иметь отдельный набор требований после завершения упаковки.
-
----
-
-## Быстрый старт
-
-### 1. Установить Factorio-мод
-
-Для пользователя готовая версия мода устанавливается обычным способом через Mod Portal или локальный файл мода.
-
-В рабочем исходном репозитории Lua-файлы находятся в `code/`, а Factorio runtime ожидает `control.lua` и остальные Lua-файлы в корне каталога мода. Инструкции для разработчиков приведены в [docs/installation.md](docs/installation.md).
-
-После запуска мира мод пишет данные в:
+Default output path on Windows:
 
 ```text
 %APPDATA%\Factorio\script-output\LTN_Analitic\data.jsonl
 ```
 
-Factorio хранит `script-output` внутри каталога пользовательских данных. [Factorio: директория пользовательских данных](https://wiki.factorio.com/User_data_directory)
+Useful in-game commands:
 
-### 2. Подготовить PostgreSQL
+These commands are designed for runtime inspection and troubleshooting while a save is running. They help confirm that data collection, buffer filling, and JSONL export remain consistent with the expected LTN lifecycle.
 
-Создайте базу и отдельную учётную запись для Gateway. Gateway текущей реализации создаёт отсутствующие таблицы ORM автоматически, поэтому пользователь Gateway должен иметь достаточные права для первоначального создания таблиц.
-
-Пример подготовки описан в [docs/database.md](docs/database.md).
-
-### 3. Запустить Gateway
-
-Текущая версия запускается из исходников:
-
-```powershell
-Set-Location .\gateway
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python main.py
-```
-
-При первом запуске откроется мастер из четырёх шагов:
-
-1. путь к JSONL;
-2. назначение данных — PostgreSQL;
-3. реквизиты PostgreSQL;
-4. проверка соединения и сохранение настроек.
-
-После сохранения откроется рабочая панель Gateway.
-
----
-
-## Где лежат данные
-
-### Выгрузка Factorio
-
-```text
-%APPDATA%\Factorio\script-output\LTN_Analitic\data.jsonl
-```
-
-Файл создаётся самим модом. Каждая непустая строка — самостоятельный JSON-пакет.
-
-### Настройки Gateway
-
-Текущая реализация сохраняет настройки пользователя в:
-
-```text
-%APPDATA%\LTN_Analitics_gateway\config.conf
-```
-
-В конфигурации находятся путь к JSONL, параметры PostgreSQL и локальная статистика запуска.
-
-> **Безопасность:** текущая версия Gateway сохраняет пароль PostgreSQL в `config.conf` в открытом виде. Этот файл нельзя публиковать, передавать другим пользователям или добавлять в Git. Для финальной standalone-версии планируется защищённое хранение секрета средствами Windows.
-
----
-
-## Что сейчас записывается в PostgreSQL
-
-JSONL-контракт содержит:
-
-- `active_orders`;
-- `order_events`;
-- `trains`;
-- `stations`.
-
-Текущий Gateway непосредственно загружает в PostgreSQL **orders** и **order_events**. Снимки поездов и станций уже присутствуют в JSONL-контракте и схемах, но их отдельное сохранение в БД является последующим этапом развития Gateway.
-
-Основные текущие таблицы:
-
-```text
-orders
-order_events
-```
-
-Подробности — в [docs/database.md](docs/database.md) и [docs/data-contract.md](docs/data-contract.md).
-
----
-
-## Повторный импорт
-
-JSONL-файл не удаляется и не очищается Gateway автоматически.
-
-Gateway может повторно прочитать уже обработанные записи. Уникальные идентификаторы используются для предотвращения повторного добавления уже существующих orders/events.
-
-При этом текущая реализация является **пакетным импортёром**: она читает весь выбранный JSONL-файл при каждом нажатии `Запустить импорт`. Постоянное отслеживание новых строк — одна из задач будущей standalone-версии Gateway.
-
----
-
-## Диагностические команды Factorio
-
-После загрузки мода доступны команды:
-
-| Команда | Назначение |
+| Command | Purpose |
 | --- | --- |
-| `/ltn_debug_world_id` | Показать `world_id` текущего мира |
-| `/ltn_regenerate_world_id` | Сгенерировать новый `world_id` |
-| `/ltn_debug_orders` | Показать активные доставки |
-| `/ltn_clear_active` | Очистить активные доставки |
-| `/ltn_debug_buffer` | Показать текущий send buffer |
-| `/ltn_debug_send_data` | Показать собранные данные для отправки |
-| `/ltn_clear_buffer` | Очистить send buffer |
-| `/ltn_debug_order <id>` | Показать order и связанные events |
-| `/ltn_write_jsonl` | Немедленно записать текущий пакет в JSONL |
+| `/ltn_debug_world_id` | Prints the persistent `world_id` for the current save. Useful for confirming that multiple JSONL batches belong to the same world and for debugging cross-save or migration issues. |
+| `/ltn_regenerate_world_id` | Generates a new persistent `world_id` for the current save and logs the change. Use only when you intentionally want to split a new data stream from the previous world history. |
+| `/ltn_debug_orders` | Displays active deliveries currently tracked in `storage.active_deliveries`, including train id, order id, and delivery state. This is the quickest way to sanity-check whether LTN deliveries are being observed correctly. |
+| `/ltn_clear_active` | Clears the active delivery table in storage. Useful for resetting stale state after a problematic save or debugging an unexpected backlog after a mod reload. |
+| `/ltn_debug_buffer` | Lists the current send buffer totals and raw buffer content. It shows how many orders, order events, trains, and stations are queued for export before the next JSONL write. |
+| `/ltn_debug_send_data` | Prints the assembled payload that would be written to JSONL. This is the most direct check that train/station snapshots, active orders, and order events are collected in the expected format. |
+| `/ltn_clear_buffer` | Clears the in-memory send buffer immediately. Use this when you want to reset queued data without restarting the save or when debugging stale queued packets. |
+| `/ltn_debug_order <id>` | Looks up a specific order id in the send buffer and prints its entry plus matching order events. This is useful for tracing a single delivery through the export pipeline. |
+| `/ltn_debug_jsonl` | Prints JSONL status: whether recording is enabled or disabled, the next sequence number, and the pending counts in orders/events/trains/stations. This is the main diagnostic command for export state. |
+| `/ltn_write_jsonl` | Forces a JSONL flush immediately when recording is enabled. If the mod setting is disabled, the command reports that no file was written and exits without exporting anything. |
 
-Полное описание — [docs/factorio-mod.md](docs/factorio-mod.md).
+See [troubleshooting](docs/troubleshooting.md) for output and save-migration guidance.
 
----
+## Companion Gateway
 
-## Структура репозитория
+The optional [LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway) is a separate application that imports the mod's JSONL into PostgreSQL. It is not included in the Factorio mod and has its own documentation in that project's repository. The Gateway repository currently provides source code; check its [Releases page](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway/releases) for binary packages.
+
+## Mod development
+
+The source Lua files are in `code/`; Factorio expects runtime Lua files at the root of the installed mod folder. Local staging instructions, architecture, and the JSONL contract are documented here:
+
+- [Installation and local staging](docs/installation.md)
+- [Mod architecture](docs/architecture.md)
+- [Factorio implementation](docs/factorio-mod.md)
+- [JSONL data contract and schemas](docs/data-contract.md)
+- [Development and release checks](docs/development.md)
+- [Companion Gateway links](docs/gateway.md)
+
+## Repository layout
 
 ```text
-.
-├── code/                       # Lua-исходники Factorio-мода
-│   ├── control.lua
-│   ├── actions.lua
-│   ├── buffer.lua
-│   ├── jsonl.lua
-│   ├── storage.lua
-│   ├── tools.lua
-│   ├── types.lua
-│   ├── debug.lua
-│   └── UUID_V4.lua
-│
-├── gateway/                    # Python Gateway
-│   ├── core/                   # БД, схемы и сервисы
-│   ├── shared/                 # конфигурация и логирование
-│   ├── tools/                  # преобразование входных данных
-│   ├── ui/                     # Tkinter GUI
-│   ├── main.py
-│   └── requirements.txt
-│
-├── schemas/                    # JSON Schema протокола
-├── docs/                       # пользовательская и техническая документация
-├── .github/                    # Copilot instructions / custom agent
-├── info.json                   # метаданные Factorio-мода
-├── thumbnail.png               # иконка мода
-└── README.md
+code/       Factorio Lua sources, including settings.lua
+locale/     English and Russian setting labels
+schemas/    JSON Schema for the JSONL contract
+docs/       Mod installation and technical documentation
+info.json   Factorio mod metadata
 ```
-
-Локальные виртуальные окружения, секреты, Git-метаданные и прочие машинные файлы не являются частью исходного проекта и не должны публиковаться.
-
----
-
-## Контракт данных
-
-Текущая версия протокола: **1.0**.
-
-Пакет содержит `protocol_version`, `world_id`, `sequence_number`, `tick`, `active_orders`, `order_events`, `trains` и `stations`.
-
-Каноническая схема:
-
-[`schemas/packet.schema.json`](schemas/packet.schema.json)
-
-Общие правила эволюции протокола описаны в [docs/data-contract.md](docs/data-contract.md).
-
-> Версия протокола и версия мода — разные понятия. `protocol_version = 1.0` не означает, что версия Factorio-мода тоже `1.0`.
-
----
-
-## Разработка
-
-Для разработки рекомендуется VS Code с поддержкой Lua и Factorio Modding Tool Kit. Проект содержит отдельные инструкции для Copilot/AI и специализированный агент для Factorio-разработки.
-
-Подробнее:
-
-[docs/development.md](docs/development.md)
-
-Изменения Lua, JSON Schema и Gateway должны рассматриваться как изменения одного контракта и проверяться согласованно.
-
----
-
-## Безопасность
-
-В проекте принципиально не должны храниться:
-
-- пароль PostgreSQL;
-- приватные connection strings;
-- токены API;
-- рабочие `.env`-файлы;
-- пользовательский `config.conf`.
-
-Секреты относятся к конкретному экземпляру Gateway, а не к Factorio-моду.
-
-Перед публикацией репозитория обязательно проверьте Git history и рабочее дерево на наличие секретов.
-
-Если секрет случайно попал в Git или был передан третьим лицам, считайте его скомпрометированным и замените его на стороне сервера.
-
-Подробнее: [SECURITY.md](SECURITY.md).
-
----
-
-## Текущий статус
-
-| Компонент | Статус |
-| --- | --- |
-| Сбор данных в Factorio | ✅ реализован |
-| JSONL-протокол | ✅ реализован |
-| JSON Schema | ✅ реализована |
-| PostgreSQL import | ✅ реализован |
-| GUI Gateway | ✅ реализован |
-| Standalone `gateway.exe` | 🚧 в разработке |
-| Защищённое хранение секретов | 🚧 планируется |
-| Постоянное отслеживание новых JSONL-записей | 🚧 планируется |
-| Хранение train/station snapshots в БД | 🚧 планируется |
-
----
-
-## Лицензия
-
-Лицензия проекта в текущем снимке репозитория не зафиксирована. Перед публичным распространением проекта добавьте `LICENSE` с выбранными условиями использования.

@@ -7,18 +7,18 @@
 
 # Python
 .venv/
-gateway/.venv/
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 
+# Local companion Gateway (kept next to the mod, but excluded from GitHub)
+gateway/
+
 # Secrets / local configuration
 .env
 .env.*
 !.env_template
-gateway/.env
-gateway/config.conf
 config.conf
 
 # Build / distribution

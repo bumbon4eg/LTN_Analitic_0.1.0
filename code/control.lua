@@ -133,6 +133,15 @@ commands.add_command(
 -- ========================================
 
 commands.add_command(
+    "ltn_debug_jsonl",
+    "Show JSONL recording status",
+    ---@return nil
+    function()
+        debug_api.show_jsonl_status()
+    end
+)
+
+commands.add_command(
     "ltn_write_jsonl",
     "Write current buffer to JSONL",
     ---@return nil
