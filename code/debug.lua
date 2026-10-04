@@ -21,6 +21,34 @@ function debug.regenerate_world_id()
 end
 
 ---@return nil
+function debug.show_jsonl_status()
+    storage_api.ensure()
+
+    local status = jsonl.is_enabled() and "ENABLED" or "DISABLED"
+    local send_buffer = storage.send_buffer
+    local train_count = 0
+    local station_count = 0
+
+    for _ in pairs(send_buffer.trains) do
+        train_count = train_count + 1
+    end
+    for _ in pairs(send_buffer.stations) do
+        station_count = station_count + 1
+    end
+
+    local message =
+        "JSONL recording: " .. status
+        .. "\nNext sequence: " .. tostring(storage.jsonl.sequence_number + 1)
+        .. "\nPending orders: " .. tostring(#send_buffer.active_orders)
+        .. "\nPending events: " .. tostring(#send_buffer.order_events)
+        .. "\nPending trains: " .. tostring(train_count)
+        .. "\nPending stations: " .. tostring(station_count)
+
+    game.print(message)
+    log(message)
+end
+
+---@return nil
 local function show_active_deliveries()
     storage_api.ensure()
 
@@ -162,6 +190,12 @@ end
 
 ---@return nil
 function debug.write_jsonl_now()
+    if not jsonl.is_enabled() then
+        local message = "JSONL writing is disabled in Mod Settings; no file was written."
+        game.print(message)
+        log(message)
+        return
+    end
 
     local success = jsonl.write()
 

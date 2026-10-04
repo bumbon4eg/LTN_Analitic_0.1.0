@@ -5,6 +5,7 @@ local jsonl = {}
 
 ---@type string
 local FILE_NAME = "LTN_Analitic/data.jsonl"
+local WRITE_SETTING = "ltn-analytic-write-jsonl"
 
 -- Версия протокола в формате "major.minor", где major и minor - целые числа.
 ---@type string
@@ -34,6 +35,20 @@ local function get_world_id()
     return storage.world_id
 end
 
+---@return boolean
+function jsonl.is_enabled()
+    local setting = settings.global[WRITE_SETTING]
+    return setting == nil or setting.value
+end
+
+---@param event table
+---@return nil
+function jsonl.on_runtime_mod_setting_changed(event)
+    if event.setting == WRITE_SETTING then
+        buffer.clear_send_buffer()
+    end
+end
+
 ---@return JsonlPacket
 function jsonl.build_packet()
 
@@ -57,6 +72,10 @@ end
 
 ---@return JsonlWriteResult
 function jsonl.write()
+    if not jsonl.is_enabled() then
+        buffer.clear_send_buffer()
+        return false
+    end
 
     local packet = jsonl.build_packet()
 
@@ -77,6 +96,10 @@ end
 ---@return nil
 function jsonl.register()
     script.on_nth_tick(360, jsonl.write)
+    script.on_event(
+        defines.events.on_runtime_mod_setting_changed,
+        jsonl.on_runtime_mod_setting_changed
+    )
 end
 
 return jsonl

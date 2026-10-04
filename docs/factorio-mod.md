@@ -12,9 +12,11 @@
 | `code/buffer.lua` | Накопление и сбор данных на отправку |
 | `code/storage.lua` | Инициализация persistent state и UUID мира |
 | `code/jsonl.lua` | Формирование и запись JSONL-пакетов |
+| `code/settings.lua` | Runtime-global переключатель записи |
 | `code/debug.lua` | Просмотр и очистка состояния, ручная запись пакета |
 | `code/UUID_V4.lua` | Генерация UUID v4 |
 | `code/types.lua` | LuaLS-типы; файл аннотаций, не используется в runtime |
+| `locale/` | Название и описание настройки на английском и русском |
 
 Основные зависимости:
 
@@ -80,6 +82,10 @@ Station snapshot содержит unit ID, имя, позицию и плане�
 
 `code/jsonl.lua` добавляет пакет в `script-output/LTN_Analitic/data.jsonl` каждые 360 игровых тиков (6 секунд). Пакет записывается даже при пустом буфере; `sequence_number` увеличивается при каждой записи.
 
+Настройка `ltn-analytic-write-jsonl` объявлена в `code/settings.lua` как `bool-setting` с `setting_type = "runtime-global"` и `default_value = true`. Она появляется в **Настройки → Настройки мода → LTN Analitic** как **«Записывать JSONL-снимки в script-output»**.
+
+При выключении runtime-setting обработчик `on_runtime_mod_setting_changed` очищает pending send buffer. Таймер продолжает вызываться, но `jsonl.write()` возвращает `false`, не создаёт пакет и не увеличивает sequence. При повторном включении в буфере нет данных за период паузы; в JSONL попадут только новые события после включения.
+
 | Команда | Назначение |
 | --- | --- |
 | `/ltn_debug_world_id` | Показать UUID мира |
@@ -90,6 +96,9 @@ Station snapshot содержит unit ID, имя, позицию и плане�
 | `/ltn_debug_send_data` | Показать собранный snapshot |
 | `/ltn_clear_buffer` | Очистить send buffer |
 | `/ltn_debug_order <id>` | Показать order и связанные events из буфера |
+| `/ltn_debug_jsonl` | Показать состояние записи, sequence и размеры буфера |
 | `/ltn_write_jsonl` | Немедленно записать пакет |
+
+`/ltn_write_jsonl` не обходит настройку: когда запись выключена, команда сообщает об этом и не пишет файл.
 
 См. также [обзор архитектуры](architecture.md) и [контракт данных](data-contract.md).

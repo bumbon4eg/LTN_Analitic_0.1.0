@@ -12,9 +12,7 @@
 - Lua Language Server / EmmyLua;
 - Factorio Modding Tool Kit;
 - Factorio 2.0;
-- Logistic Train Network;
-- Python 3.12 для Gateway;
-- PostgreSQL.
+- Logistic Train Network 2.0.0 или новее.
 
 Для AI-помощника в репозитории предусмотрены:
 
@@ -46,17 +44,12 @@ Lua runtime Factorio основан на модифицированном Lua 5.
 
 ---
 
-## Проверка Gateway
+## Внешний Gateway
 
-```powershell
-Set-Location .\gateway
-py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python main.py
-```
+Gateway — отдельный companion-проект и не входит в runtime мода. Его исходники,
+инструкция установки и проверки публикуются отдельно:
 
-Перед commit рекомендуется как минимум импортировать проект в IDE и убедиться, что отсутствуют очевидные import/type errors.
+[LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway)
 
 ---
 
@@ -69,21 +62,19 @@ Factorio Lua
     ↕
 JSON Schema
     ↕
-Gateway parser / Pydantic
+внешний Gateway
     ↕
-Database models
-    ↕
-Documentation
+совместимая документация
 ```
 
 Порядок работы:
 
 1. изменить producer в `code/`;
 2. обновить нужные схемы в `schemas/`;
-3. обновить Gateway-схемы/formatter;
+3. согласовать обновление внешнего Gateway;
 4. проверить обратную совместимость;
 5. обновить `docs/data-contract.md`;
-6. проверить существующие JSONL-файлы;
+6. проверить существующие JSONL-файлы на совместимость;
 7. только после этого менять `protocol_version`, если это действительно требуется.
 
 ---
@@ -114,9 +105,12 @@ Documentation
 info.json
 thumbnail.png
 code\*.lua
+locale\
 ```
 
-Это именно **runtime-копия мода**, а не build artifact. Репозиторий остаётся в удобной для разработки структуре `code/ + gateway/ + schemas/ + docs/`.
+Это именно **runtime-копия мода**, а не build artifact. Исходный проект мода
+содержит `code/`, `locale/`, `schemas/` и документацию; Gateway поставляется
+отдельно.
 
 ---
 
@@ -148,7 +142,7 @@ local database dumps
 - Factorio 2.0 + LTN;
 - новый мир и существующий save;
 - JSONL output;
-- повторный импорт JSONL;
-- PostgreSQL SSL и non-SSL сценарии, если оба поддерживаются окружением;
+- runtime-переключатель записи в настройках мода;
+- локализации setting prototype в каталоге `locale/`;
 - отсутствие секретов в Git;
 - документацию и installation flow.
