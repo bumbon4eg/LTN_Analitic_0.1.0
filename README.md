@@ -41,7 +41,7 @@ See [troubleshooting](docs/troubleshooting.md) for output and save-migration gui
 
 ## Companion Gateway
 
-The optional [LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway) is a separate application that imports the mod's JSONL into PostgreSQL. It is not included in the Factorio mod and has its own documentation in that project's repository. The Gateway repository currently provides source code; check its [Releases page](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway/releases) for binary packages.
+The optional [LTN Analytics Gateway](https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master) is a separate application that imports the mod's JSONL into PostgreSQL. It is not included in the Factorio mod; see the Gateway repository for its source, setup instructions, and available releases.
 
 ## Mod development
 

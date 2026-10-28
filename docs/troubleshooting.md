@@ -33,4 +33,4 @@
 
 ## Ошибки внешнего Gateway
 
-Factorio-мод не подключается к PostgreSQL. Для JSONL parsing/import, SSL/TLS или database errors обратитесь к документации [отдельного LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway).
+Factorio-мод не подключается к PostgreSQL. Для JSONL parsing/import, SSL/TLS или database errors обратитесь к документации [отдельного LTN Analytics Gateway](https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master).

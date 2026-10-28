@@ -49,7 +49,7 @@ Lua runtime Factorio основан на модифицированном Lua 5.
 Gateway — отдельный companion-проект и не входит в runtime мода. Его исходники,
 инструкция установки и проверки публикуются отдельно:
 
-[LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway)
+[LTN Analytics Gateway](https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master)
 
 ---
 
@@ -131,6 +131,19 @@ local database dumps
 Также не должны попадать в публичную историю реальные пароли, токены и connection strings.
 
 ---
+
+## Сборка и проверка релиза
+
+Соберите проверенный runtime-архив командой из корня репозитория:
+
+```powershell
+.\build-release.ps1
+```
+
+ZIP появится в `_release/` и будет назван по `name` и `version` из `info.json`.
+Скрипт проверит обязательные поля манифеста и runtime-файлы. Архив содержит внутреннюю
+папку мода с `info.json` в корне, как описано в [официальной спецификации структуры мода](https://lua-api.factorio.com/latest/auxiliary/mod-structure.html).
+Не загружайте на Mod Portal исходный архив GitHub или ZIP каталога проекта.
 
 ## Перед релизом
 

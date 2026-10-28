@@ -1,7 +1,7 @@
 {
   "name": "LTN_Analitic",
   "title": "LTN Analitic",
-  "description": "Factorio 2.0 analytics mod for Logistic Train Network. Collects delivery, order, train, station, and event data, then writes versioned JSONL packets. JSONL recording can be toggled in Mod Settings. The mod does not connect to a database. Companion importer: https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway",
+  "description": "Factorio 2.0 analytics mod for Logistic Train Network. Collects delivery, order, train, station, and event data, then writes versioned JSONL packets. JSONL recording can be toggled in Mod Settings. The mod does not connect to a database. Companion importer: https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master",
   "author": "ZorngeistQual|bombo4len",
   "homepage": "https://github.com/bumbon4eg/LTN_Analitic_0.1.0/blob/main/README.md",
   "version": "0.1.1",

@@ -11,7 +11,7 @@ script-output/LTN_Analitic/data.jsonl
            └──► внешний потребитель (например, LTN Analytics Gateway)
 ```
 
-[LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway) — отдельное приложение для импорта JSONL. Оно не входит в архив Factorio-мода.
+[LTN Analytics Gateway](https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master) — отдельное приложение для импорта JSONL. Оно не входит в архив Factorio-мода.
 
 ## Сбор и запись
 

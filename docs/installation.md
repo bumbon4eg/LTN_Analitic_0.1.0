@@ -6,7 +6,7 @@
 - Logistic Train Network 2.0.0 или новее;
 - optional dependencies перечислены в `info.json`.
 
-Для импорта JSONL в базу данных используется отдельное приложение [LTN Analytics Gateway](https://github.com/Zorngeist-Qual/LTN-Analytics-Gateway). Оно не требуется для запуска мода.
+Для импорта JSONL в базу данных используется отдельное приложение [LTN Analytics Gateway](https://github.com/bumbon4eg/LTN-Analytics-Gateway/tree/master). Оно не требуется для запуска мода.
 
 ## Установка опубликованной версии
 
@@ -33,7 +33,26 @@ locale\
 
 Результирующая структура должна включать `control.lua`, `settings.lua`, остальные Lua-файлы и `locale/en/locale.cfg` с `locale/ru/locale.cfg` в корне мода. Каталоги `gateway/`, `schemas/` и `docs/` в пакет Factorio не включаются.
 
-В репозитории нет автоматического build-скрипта. Для Mod Portal создайте ZIP из содержимого runtime-каталога, не добавляя сам родительский каталог уровнем выше.
+## Сборка ZIP для релиза
+
+Из корня репозитория запустите в Windows PowerShell:
+
+```powershell
+.\build-release.ps1
+```
+
+Скрипт проверяет обязательные поля `info.json`, формат версии и имя мода,
+наличие runtime Lua-файлов, локализаций, миниатюры и лицензии. Он собирает
+`_release\<name>_<version>.zip`; имя и версия берутся из `info.json`. Исходные
+`code/`, `docs/`, `schemas/` и настройки разработки в архив не попадают.
+
+По официальной структуре Factorio имя ZIP должно иметь формат
+`<имя-мода>_<версия>.zip`, а внутри должна быть папка мода с `info.json`,
+runtime Lua-файлами в корне, `locale/`, `thumbnail.png` и `LICENSE`. Скрипт
+создаёт эту внутреннюю папку с именем `<имя-мода>_<версия>`.
+
+См. официальную [спецификацию структуры мода и `info.json`](https://lua-api.factorio.com/latest/auxiliary/mod-structure.html)
+и [API публикации релизов Mod Portal](https://wiki.factorio.com/Mod_upload_API).
 
 ## Запись JSONL
 
